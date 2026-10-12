@@ -52,7 +52,10 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
   cohesive `Validate`, `Build`, `RecoverBuild`, `Push` and `RecoverPush`
   workflow with staged concrete values. This replaces its speculative
   `Package`, per-member `BuildSandbox` and generic `Publish` methods. Installed
-  `kmx suite` commands and their output are unchanged.
+  `kmx suite` commands and their output are unchanged. The initial Build/Push
+  contract is image-backed; valid native-Orka suites requiring zero member
+  images remain outside it until execution-profile artifact requirements are
+  modeled.
 
 ### Upgrading
 

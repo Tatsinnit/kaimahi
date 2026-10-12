@@ -63,7 +63,7 @@ implemented end to end.
 | Interface | Responsibility | Main operations |
 |---|---|---|
 | `AgentEnvironment` | Prepare and manage destination targets and runtimes | `Up`, `RecoverUp`, `Register`, `Inspect`, `Down`, `RecoverDown`, `Forget` |
-| `AgentSuites` | Materialize a validated definition, build its complete represented member set, and push those immutable outputs | `Validate`, `Build`, `RecoverBuild`, `Push`, `RecoverPush` |
+| `AgentSuites` | Materialize a validated definition, build its initial image-backed member set, and push those immutable outputs | `Validate`, `Build`, `RecoverBuild`, `Push`, `RecoverPush` |
 | `AgentDeployments` | Build and deploy authored revisions or sandbox images | `BuildRevision`, `Lift`, `RecoverLift`, `Status`, `Retire`, `RecoverRetire` |
 
 The definitions are in:
@@ -336,6 +336,8 @@ The Go package is alpha design evidence rather than a ready-to-instantiate SDK:
   builds a complete suite nor implements the northbound `Push` contract, and its
   images are not AgentSuite-conformant; see the
   [suite build reference](kmx.md#experimental-agentsuite-image-build).
+- Native-Orka workspaces with `requiredImages: []` are valid and publishable,
+  but are outside this first image-backed northbound Build/Push contract.
 
 The authoritative contract details remain in:
 

@@ -435,8 +435,10 @@ func (r ValidateSuiteRequest) Validate() error {
 }
 
 // BuildSuiteRequest asks KMX to build every agent/platform composition in one
-// exact validated suite. Builder selection, temporary output locations and
-// member-level planning remain implementation details.
+// exact validated suite through the initial image-backed execution profile.
+// Builder selection, temporary output locations and member-level planning
+// remain implementation details. Image-free native profiles are valid
+// AgentSuites but are outside this first Build contract.
 type BuildSuiteRequest struct {
 	Operation OperationID
 	Suite     ValidatedAgentSuite
@@ -545,9 +547,10 @@ func (i *AgentSandboxImage) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// BuildSuiteResult is the complete set of currently representable member-image
-// outputs for one validated suite. It deliberately has no independent release
-// identity: a future AgentSuite release graph needs its own reviewed contract.
+// BuildSuiteResult is the complete member-image set for the initial image-backed
+// execution profile. It deliberately has no independent release identity: a
+// future general build contract must derive required artifacts, including zero
+// images, from an explicit execution profile.
 type BuildSuiteResult struct {
 	Operation OperationID         `json:"operation"`
 	Suite     ValidatedAgentSuite `json:"suite"`
@@ -774,6 +777,9 @@ func validateSuiteImages(suite ValidatedAgentSuite, images []AgentSandboxImage, 
 	if complete && suite.Report.ToolCompositions != 0 {
 		return fmt.Errorf("complete AgentSuite builds cannot yet represent standalone ToolProvider images")
 	}
+	if complete && len(images) == 0 {
+		return fmt.Errorf("the image-backed AgentSuite workflow requires member images")
+	}
 	expected := make(map[string]SuiteCompositionSelection, len(suite.Report.CompositionSelections))
 	for _, selection := range suite.Report.CompositionSelections {
 		expected[suiteImageSelectionKey(selection.Agent, selection.Platform)] = selection
@@ -826,8 +832,10 @@ func sameSuiteReport(a, b SuiteReport) bool {
 	return true
 }
 
-// AgentSuites owns the cohesive validate, build and push workflow. It does not
-// expose member builders, storage transports, runtime adapters or deployment.
+// AgentSuites owns the cohesive validate, image-backed build and push workflow.
+// It does not expose member builders, storage transports, runtime adapters or
+// deployment. Image-free execution profiles remain valid but are outside this
+// initial Build contract.
 type AgentSuites interface {
 	Validate(context.Context, ValidateSuiteRequest) (ValidatedAgentSuite, error)
 	Build(context.Context, BuildSuiteRequest) (BuildSuiteResult, error)

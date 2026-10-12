@@ -30,7 +30,7 @@ Their responsibilities are deliberately separate:
 | Interface | Owns | Does not own |
 |---|---|---|
 | `AgentEnvironment` | Destination target and runtime setup | Agent definition or deployment |
-| `AgentSuites` | Validate one exact definition, build its represented member set, and push those immutable outputs | Destination mutation or implementation-specific build/storage controls |
+| `AgentSuites` | Validate one exact definition, build its image-backed member set, and push those immutable outputs | Image-free execution profiles, destination mutation or implementation-specific build/storage controls |
 | `AgentDeployments` | Build direct revisions and lift/status/retire deployable sources | Target teardown or OCI publication |
 
 The dependency direction is:
@@ -175,12 +175,19 @@ built, err := controller.suites.Build(ctx, kmx.BuildSuiteRequest{
 })
 ```
 
-The initial `Build` contract is whole-suite: it returns exactly one verified
-`AgentSandboxImage` for every `(agent, platform)` composition in the validation
-report or fails. `BuildSuiteProgress` may report a verified subset while an
-operation is incomplete, but a complete result cannot omit or duplicate a
-composition. The result also refuses suites requiring standalone ToolProvider
-images because that output class is not yet represented.
+The initial `Build` contract is both whole-suite and **image-backed**: it returns
+exactly one verified `AgentSandboxImage` for every `(agent, platform)`
+composition in the validation report or fails. `BuildSuiteProgress` may report a
+verified subset while an operation is incomplete, but a complete result cannot
+omit or duplicate a composition. The result also refuses suites requiring
+standalone ToolProvider images because that output class is not yet represented.
+
+The native-Orka suite profile introduced by #437 declares `requiredImages: []`
+and can be validated and transferred without member images; #442 is proving its
+image-free evaluation path. That profile cannot reach this alpha `Build`/`Push`
+workflow. Before this becomes the general suite workflow, completeness must be
+derived from an explicit execution profile's required artifacts, including zero
+images, rather than inferred from composition count alone.
 
 Each `AgentSandboxImage` binds one runnable image to the exact AgentSuite
 manifest, agent, platform, build profile, composition digest and embedded
@@ -188,8 +195,8 @@ sandbox-binding digest. These values define what a conformant implementation
 must prove; the installed experimental AgentKit builder does not yet produce
 such images and therefore does not implement this method.
 
-`BuildSuiteResult` is the complete set currently expressible by the alpha
-contract. It is deliberately **not** named or identified as an
+`BuildSuiteResult` is the complete image-backed set currently expressible by the
+alpha contract. It is deliberately **not** named or identified as an
 `AgentSuiteRelease`: no aggregate OCI release root or inventory has been agreed.
 `BuildSuiteResult.ValidateAgainst` binds a completed result to the originating
 operation and validated suite; recovery progress has the same request-binding
@@ -205,7 +212,7 @@ pushed, err := controller.suites.Push(ctx, kmx.PushSuiteRequest{
 })
 ```
 
-`Push` copies an already-built suite and its represented member images. It must
+`Push` copies an already-built image-backed suite and its member images. It must
 not reopen source, rerun a builder or change any suite, image, composition or
 binding identity. `PushSuiteResult.ValidateAgainst` compares location-free refs
 and requires every returned retrieval location to equal the request's
@@ -394,6 +401,10 @@ Run/cancel, quickstart, durable progress streams, and network APIs remain
 deferred. Quickstart may eventually compose environment setup, direct revision
 build/lift, and a separate run lifecycle while remaining an explicitly local
 runtime recipe.
+
+The current native-Orka workspace path is deliberately separate: its execution
+profile requires no member image and does not implement this first image-backed
+northbound Build/Push contract.
 
 ## Evidence required before stability
 

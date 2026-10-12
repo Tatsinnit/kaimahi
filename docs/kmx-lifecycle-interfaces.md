@@ -58,9 +58,9 @@ AgentEnvironment -> Target -> Runtime ------------------+
 
 The guiding relationship is:
 
-> `AgentSuites` validates one immutable definition, builds its complete
-> currently representable member-image set, and pushes those identities without
-> rebuilding.
+> `AgentSuites` validates one immutable definition, builds the complete member-
+> image set required by the initial image-backed execution profile, and pushes
+> those identities without rebuilding.
 > `AgentEnvironment` prepares a target and runtime. `AgentDeployments` places an
 > authored revision or sandbox image there without transferring ownership
 > authority between those concerns.
@@ -155,9 +155,9 @@ The verbs form separate lifecycle pairs:
 `AgentEnvironment.Up` composes target setup with runtime installation, but its
 mode is explicit: resolve only, provision only, or resolve then provision after
 an established absence. Internal resolution returns `Found: false` as data;
-operational errors never become absence. `AgentSuites` owns the cohesive
-validate/build/push workflow, but not concrete builders, storage transports or
-deployment.
+operational errors never become absence. `AgentSuites` owns validation and the
+initial image-backed build/push workflow, but not concrete builders, storage
+transports, image-free execution profiles or deployment.
 `Forget` is deliberately not `Down`: forgetting a bring-your-own target removes
 local configuration and never mutates the target.
 
@@ -169,6 +169,13 @@ exact checked graph; `Build` returns one sandbox image for every composition the
 current alpha result can represent; `Push` relocates those identities without
 rebuilding. Incomplete recovery progress may contain a verified subset, but a
 complete result cannot omit a composition.
+
+This first completeness rule is intentionally profile-specific. The native-Orka
+profile from #437 declares `requiredImages: []`, and #442 is proving image-free
+evaluation for that valid suite shape; it remains outside this image-backed
+Build/Push contract. A future general workflow derives its required artifact set
+from an explicit execution profile, including profiles that require zero member
+images.
 
 The current staged build/push results do not define an aggregate release root.
 They are not a settled `AgentSuiteRelease` or a suite-level deployment source.
@@ -226,7 +233,7 @@ The model distinguishes:
 ```text
 AgentDeployments.BuildRevision -> validated AgentRevision
 AgentSuites.Validate           -> ValidatedAgentSuite
-AgentSuites.Build/Push         -> complete represented member-image set
+AgentSuites.Build/Push         -> complete image-backed member set
 internal RuntimeBuilder        -> DeploymentSource -> runtime-native bundle
 ```
 

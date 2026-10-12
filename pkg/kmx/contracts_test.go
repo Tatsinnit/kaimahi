@@ -436,6 +436,7 @@ func TestAgentSuitesBuildRejectsMismatchedAndUnsupportedOutputs(t *testing.T) {
 		name   string
 		mutate func(*ValidatedAgentSuite, *[]AgentSandboxImage)
 	}{
+		{"no images", func(_ *ValidatedAgentSuite, images *[]AgentSandboxImage) { *images = nil }},
 		{"missing image", func(_ *ValidatedAgentSuite, images *[]AgentSandboxImage) { *images = (*images)[:1] }},
 		{"duplicate image", func(_ *ValidatedAgentSuite, images *[]AgentSandboxImage) { (*images)[1] = (*images)[0] }},
 		{"foreign suite", func(_ *ValidatedAgentSuite, images *[]AgentSandboxImage) {

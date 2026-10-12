@@ -169,8 +169,10 @@ credentials. Runtime cancellation/history and target cleanup remain separate.
 
 `pkg/kmx` is alpha, unwired design evidence, not a replacement for the production
 runtime contract. `AgentEnvironment`, `AgentSuites` and `AgentDeployments`
-separate target preparation, cohesive validate/build/push workflows and workload
-placement. Member builders and OCI storage transports remain internal.
+separate target preparation, validation plus the initial image-backed build/push
+workflow, and workload placement. Image-free native execution profiles remain
+outside that first build contract. Member builders and OCI storage transports
+remain internal.
 Focused suite ports live in `internal/kmx/agentsuite`; platform/runtime ports
 and scoped receipt factories live in `internal/kmx/lifecycle`.
 Retirement receipts grant no target teardown authority. Read the
