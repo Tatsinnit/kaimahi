@@ -64,6 +64,24 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
   qualification and its separate one-shot native A2A MCP proof. Supported
   operations and Python's render-only boundary are unchanged.
 
+### Breaking
+
+- The experimental, unwired `pkg/kmx.AgentSuites` Go contract now exposes the
+  cohesive `Validate`, `Build`, `RecoverBuild`, `Push` and `RecoverPush`
+  workflow with staged concrete values. This replaces its speculative
+  `Package`, per-member `BuildSandbox` and generic `Publish` methods. Installed
+  `kmx suite` commands and their output are unchanged. The initial Build/Push
+  contract is image-backed; valid native-Orka suites requiring zero member
+  images remain outside it until execution-profile artifact requirements are
+  modeled.
+
+### Upgrading
+
+- Consumers of the alpha `pkg/kmx` design package must adopt
+  `ValidatedAgentSuite`, `BuildSuiteResult`/`BuildSuiteProgress` and
+  `PushSuiteResult`. Builder selection, member planning and OCI transport now
+  remain internal capabilities rather than northbound workflow methods.
+
 ## v0.5.1 — 2026-10-12
 
 ### Fixed
