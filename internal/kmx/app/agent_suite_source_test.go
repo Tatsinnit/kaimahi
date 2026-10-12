@@ -2,11 +2,15 @@ package app
 
 import (
 	"context"
+	"crypto/sha1"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/kaimahi-agents/kaimahi/internal/kmx/agentsuite/workspace"
 )
 
 func gitSuiteRepository(t *testing.T) (string, string) {
@@ -56,6 +60,159 @@ func copyTree(t *testing.T, from, to string) {
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func gitWorkspaceRepository(t *testing.T, nested bool) (string, string, *workspace.Prepared) {
+	t.Helper()
+	root := t.TempDir()
+	source := root
+	if nested {
+		source = filepath.Join(root, "workspaces", "greeter")
+	}
+	input := filepath.Join(t.TempDir(), "input.md")
+	writeFile(t, input, "Answer briefly.\n")
+	if err := workspace.Create(context.Background(), source, workspace.CreateOptions{Name: "greeter", Model: "test-model", InstructionsFile: input}); err != nil {
+		t.Fatal(err)
+	}
+	runGit(t, root, "init", "-q")
+	runGit(t, root, "add", ".")
+	runGit(t, root, "-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "-m", "workspace")
+	prepared, err := workspace.Prepare(context.Background(), source, filepath.Join(t.TempDir(), "cache"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return root, source, prepared
+}
+
+func TestWorkspaceSourceRevisionUsesPreparedAuthoredInputs(t *testing.T) {
+	for _, nested := range []bool{false, true} {
+		t.Run(fmt.Sprintf("nested %t", nested), func(t *testing.T) {
+			root, source, prepared := gitWorkspaceRepository(t, nested)
+			writeFile(t, filepath.Join(source, "unrelated.txt"), "Not selected or distributed.\n")
+			files, err := workspace.SourceFiles(context.Background(), source, prepared)
+			if err != nil {
+				t.Fatal(err)
+			}
+			options, warning := suitePushOptions(context.Background(), source, SuitePushProvenance{Enabled: true, Require: true, BuilderVersion: "v9.9.9"}, files)
+			if warning != "" || options.Provenance == nil || !options.Provenance.Require || options.Provenance.BuilderVersion != "v9.9.9" {
+				t.Fatalf("workspace push options: %+v, %q", options, warning)
+			}
+			revision := options.Provenance.Source
+			if revision == nil || revision.Commit != runGit(t, root, "rev-parse", "HEAD") {
+				t.Fatalf("prepared workspace revision: %+v, %q", revision, warning)
+			}
+			wantPath := "."
+			if nested {
+				wantPath = "workspaces/greeter"
+			}
+			if revision.Path != wantPath {
+				t.Fatalf("source path = %q, want %q", revision.Path, wantPath)
+			}
+			writeFile(t, filepath.Join(source, "agents/greeter/instructions.md"), "Different authored source.\n")
+			// Commit from the repository root without relying on source path spelling.
+			runGit(t, root, "add", "-u")
+			runGit(t, root, "-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "-m", "changed source")
+			if revision, _ := sourceRevision(context.Background(), source, files); revision != nil {
+				t.Fatal("frozen candidate claimed the later source commit")
+			}
+			if _, err := workspace.SourceFiles(context.Background(), source, prepared); err == nil {
+				t.Fatal("changed source reused old candidate inputs")
+			}
+		})
+	}
+}
+
+func TestWorkspaceSourceRevisionAllowsNestedMemberNamedInstructions(t *testing.T) {
+	root, source, _ := gitWorkspaceRepository(t, true)
+	file := filepath.Join(source, "agents/greeter/member.yaml")
+	data, err := os.ReadFile(file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, file, strings.Replace(string(data), "instructions: instructions.md", "instructions: notes/member.yaml", 1))
+	if err := os.Mkdir(filepath.Join(source, "agents/greeter/notes"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Rename(filepath.Join(source, "agents/greeter/instructions.md"), filepath.Join(source, "agents/greeter/notes/member.yaml")); err != nil {
+		t.Fatal(err)
+	}
+	runGit(t, root, "add", ".")
+	runGit(t, root, "-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "-m", "nested instructions")
+	prepared, err := workspace.Prepare(context.Background(), source, filepath.Join(t.TempDir(), "cache"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	inputs, err := workspace.SourceFiles(context.Background(), source, prepared)
+	if err != nil {
+		t.Fatal(err)
+	}
+	committed, err := parseLsTree([]byte(runGit(t, root, "ls-tree", "-r", "-z", "--full-tree", "HEAD")), "workspaces/greeter", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 100; i++ {
+		if reason := matchWorkspaceTree(context.Background(), inputs, committed, sha1.New); reason != "" {
+			t.Fatalf("nested instructions confused member inventory: %s", reason)
+		}
+	}
+}
+
+func TestWorkspaceSourceRevisionIgnoresUnselectedGitlinks(t *testing.T) {
+	root, source, prepared := gitWorkspaceRepository(t, false)
+	commit := runGit(t, root, "rev-parse", "HEAD")
+	runGit(t, root, "update-index", "--add", "--cacheinfo", "160000,"+commit+",vendor/library")
+	runGit(t, root, "-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "-m", "unrelated submodule")
+	inputs, err := workspace.SourceFiles(context.Background(), source, prepared)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if revision, reason := sourceRevision(context.Background(), source, inputs); revision == nil {
+		t.Fatalf("unselected gitlink suppressed source commit: %s", reason)
+	}
+}
+
+func TestWorkspaceSourceRevisionChecksHEADAttributesNotJustLiveOverrides(t *testing.T) {
+	root, source, _ := gitWorkspaceRepository(t, true)
+	writeFile(t, filepath.Join(root, ".gitattributes"), "*.md filter=custom\n")
+	runGit(t, root, "add", ".gitattributes")
+	runGit(t, root, "-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "-m", "rewriting attribute")
+	writeFile(t, filepath.Join(root, ".gitattributes"), "*.md -filter\n")
+	prepared, err := workspace.Prepare(context.Background(), source, filepath.Join(t.TempDir(), "cache"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	files, err := workspace.SourceFiles(context.Background(), source, prepared)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if revision, reason := sourceRevision(context.Background(), source, files); revision != nil || !strings.Contains(reason, "attribute") {
+		t.Fatalf("HEAD rewriting attribute masked by live override: %+v, %q", revision, reason)
+	}
+}
+
+func TestWorkspaceSourceRevisionRefusesDeletedCommittedCase(t *testing.T) {
+	root, source, _ := gitWorkspaceRepository(t, true)
+	data, err := os.ReadFile(filepath.Join(source, "eval/example.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(source, "eval/second.yaml"), string(data))
+	runGit(t, root, "add", ".")
+	runGit(t, root, "-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-q", "-m", "second case")
+	if err := os.Remove(filepath.Join(source, "eval/second.yaml")); err != nil {
+		t.Fatal(err)
+	}
+	prepared, err := workspace.Prepare(context.Background(), source, filepath.Join(t.TempDir(), "cache"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	files, err := workspace.SourceFiles(context.Background(), source, prepared)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if revision, _ := sourceRevision(context.Background(), source, files); revision != nil {
+		t.Fatal("missing selected case still claimed HEAD")
 	}
 }
 

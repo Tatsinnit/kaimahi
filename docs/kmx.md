@@ -96,6 +96,8 @@ release is scheduled. See the
 | `kmx orka install` | verify the pinned v0.2.0 release chart; apply its CRDs; install harness-v2 with fullname `orka-api` on the selected context; keep the chart-generated snapshot key private; optionally create a keyless Provider. Refuses old v0.1.3 installs rather than upgrading. [Orka](orka.md) |
 | `kmx orka status` | read running controller version, Deployments, CRDs and Providers; distinguish unreadable from absent and running version from pin |
 | `kmx agent create [name]` | default, unchanged Orka authoring: native Provider + Agent and optional Task. Explicit `--runtime kagent <name>` is create-only for an already-installed exact Kagent v0.10.2. Retrieve a real answer only with `--task`. [Create contract](#kmx-agent-create) |
+| `kmx agent create <name> --workspace <directory> --model <model> --instructions <file>` | author one tool-free native-Orka suite member offline, without cluster configuration or image construction. Optional `--description`; other create-mode flags refuse. [Workspace guide](suite-workspace.md) |
+| `kmx suite push --workspace <directory> <reference>` | prepare a validated one-member native suite with authored cases, then copy its exact OCI graph to a registry or `--to-layout` target. Required member images are empty. Does not evaluate or deploy. Existing registry policy applies. [Workspace guide](suite-workspace.md) |
 | `kmx suite build <directory> ...` | resolve one agent/platform composition and build an OCI image-layout tar through AgentKit using Docker buildx. The current implementation is explicitly experimental and non-conformant because it treats the selected harness image as a monolithic AgentKit adapter and does not compose the runtime-base image. |
 | `kmx suite push <directory> <registry/repository:tag>` | deterministically archive and validate an extracted AgentSuite, then push it to an OCI registry. An existing tag with the same digest is a no-op; a different digest requires `--force`. It also attaches unsigned [suite provenance](#suite-provenance) before moving the tag; `--provenance=false` skips it and `--require-provenance` fails without moving the tag if it cannot be attached. Prints the pushed and provenance digests. See [registry safety](#registry-authentication). |
 | `kmx suite push <directory> --to-layout <layout> <repository:tag>` | deterministically archive and validate an extracted AgentSuite, then add its referenced artifact to a local OCI image layout. New layouts are published atomically; existing layouts retain unrelated references. Output states whether the layout was created or updated. No provenance is attached, since a conformant AgentSuite layout holds exactly one manifest. |
@@ -366,9 +368,9 @@ section documents its build type, which the statement names as
 | `subject` | the suite name and its OCI manifest digest |
 | `runDetails.builder.id` | `https://github.com/kaimahi-agents/kaimahi/cmd/kmx`; `version.kmx` is the kmx version when known |
 | `resolvedDependencies` | one `gitCommit`, with a `git+https://` URI when `origin` is a credential-free HTTPS or `git@host:` remote; absent otherwise |
-| `externalParameters.sourcePath` | the suite directory relative to the repository root, when a commit is recorded |
+| `externalParameters.sourcePath` | the extracted suite or authored workspace directory relative to the repository root, when a commit is recorded |
 
-kmx records the commit only when every file it packs matches `HEAD` byte for
+For extracted directories, kmx records the commit only when every file it packs matches `HEAD` byte for
 byte, with the same executable bit, and nothing else is in the directory:
 untracked, ignored, edited, deleted and skip-worktree files, empty
 directories, and `eol`, `filter`, `ident` or `working-tree-encoding` Git
@@ -378,6 +380,18 @@ anyone can check the claim: check out the commit with
 with the recorded kmx version, and compare the suite digest. The origin URL
 and path are published with the suite; use `--provenance=false` if they are
 private.
+
+Registry `suite push --workspace` uses the same unsigned provenance policy and
+flags. Its commit check compares the fingerprint-bound raw authored inputs with
+HEAD, including executable bits, rewriting attributes and the complete case and
+one-member inventory. Unrelated files and Git internals are not selected inputs.
+Generated cache content is not the Git source. Workspace commit detection requires
+Git 2.40+ for pinned-HEAD attribute checks; older Git safely omits the commit with
+an explanatory warning. To reproduce a workspace claim,
+check out the recorded commit with `-c core.autocrlf=false`, then run
+`kmx suite push --workspace SOURCE_PATH --to-layout NEW_LAYOUT v1` with the recorded
+kmx version and compare the suite digest. Dirty/non-Git source still gets a
+source-less claim; `--require-provenance` requires attachment, not a source commit.
 
 The statement has no timestamps, so the same suite, source and kmx version
 always produce the same referrer. It is a claim, **not a signature**: anyone

@@ -41,7 +41,7 @@ func Push(
 	source string,
 	destination string,
 	reference string,
-) (PushResult, error) {
+) (result PushResult, err error) {
 	if reference == "" {
 		return PushResult{}, errors.New("AgentSuite push reference is required")
 	}
@@ -80,6 +80,11 @@ func Push(
 	}
 	defer os.RemoveAll(packedRoot)
 
+	release, err := lockLayoutPublication(ctx, destinationPath)
+	if err != nil {
+		return PushResult{}, err
+	}
+	defer finishLayoutPublication(release, &err)
 	targetPath := destinationPath
 	publishTarget := false
 	updatedTarget := false
