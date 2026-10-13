@@ -46,7 +46,7 @@ Create and push discover the nearest ancestor `workspace.yaml`; `--workspace DIR
 selects an exact root without fallback. Read the [workspace lifecycle](docs/suite-workspace.md)
 for identities, evidence privacy, and failure boundaries.
 
-## One Fresh Answer
+## Get Your First Answer
 
 Install Docker or Podman (`CONTAINER_ENGINE=podman` selects Podman), then choose
 one independent install route for the latest stable release. Go installs require

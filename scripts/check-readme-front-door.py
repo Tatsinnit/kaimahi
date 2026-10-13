@@ -10,7 +10,7 @@ ORDER = [
     ("ketu icon", r'src="brand/ketu\.svg"'),
     ("product line", r"^\*\*Agent Builder CLI for Kubernetes\.\*\*$"),
     ("journey heading", r"^## Create, Prove, Lift$"),
-    ("first-answer heading", r"^## One Fresh Answer$"),
+    ("first-answer heading", r"^## Get Your First Answer$"),
     ("workspace/live heading", r"^## Workspace And Live Paths$"),
     ("runtime boundaries heading", r"^## Runtime Boundaries$"),
     ("safety/status heading", r"^## Safety And Status$"),

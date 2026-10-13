@@ -34,7 +34,7 @@ GOOD = """<img src="brand/ketu.svg" alt="Kaimahi ketu mark">
 [![Release](https://img.shields.io/github/v/release/kaimahi-agents/kaimahi)](https://github.com/kaimahi-agents/kaimahi/releases)
 [![License](https://img.shields.io/github/license/kaimahi-agents/kaimahi)](LICENSE)
 ## Create, Prove, Lift
-""" + JOURNEY + """## One Fresh Answer
+""" + JOURNEY + """## Get Your First Answer
 ```bash
 """ + INSTALL + """```
 ```bash
@@ -67,7 +67,7 @@ for label, literal in [
     ("ketu icon", '<img src="brand/ketu.svg" alt="Kaimahi ketu mark">\n'),
     ("product line", "**Agent Builder CLI for Kubernetes.**\n"),
     ("journey heading", "## Create, Prove, Lift\n"),
-    ("first-answer heading", "## One Fresh Answer\n"),
+    ("first-answer heading", "## Get Your First Answer\n"),
     ("workspace/live heading", "## Workspace And Live Paths\n"),
     ("runtime boundaries heading", "## Runtime Boundaries\n"),
     ("safety/status heading", "## Safety And Status\n"),
