@@ -137,6 +137,15 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
 
 ### Breaking
 
+- The experimental, unwired Go `AgentEnvironment` API now models one
+  object-to-object setup operation: `EnvironmentSpec -> Up -> Environment`.
+  Logical `EnvironmentRef` identity is separate from exact deployment
+  `TargetRef` identity. The old `UpRequest`/`UpResult`, inspection,
+  registration, teardown and recovery methods, their setup receipts and unused
+  management ports are removed without compatibility aliases. This does not
+  change `kmx local up`, quickstart, local teardown, AgentSuite commands or any
+  installed behavior.
+
 - Orka chart installs now use `kmx.kaimahi.dev/installed`, matching the KMX
   label/API-group domain. Clusters installed by an older kmx retain
   `kmx.kaimahi.ai/installed` in their Helm values and are no longer recognized
@@ -192,6 +201,12 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
   modeled.
 
 ### Upgrading
+
+- Go consumers of the experimental `AgentEnvironment` API should pass
+  `EnvironmentSpec{Name: ...}` to `Up` and consume `Environment`. There is no
+  replacement yet for its removed inspection, registration, teardown or
+  recovery APIs; continue using the installed commands or implementation-owned
+  operations until those contracts have production evidence.
 
 - Add `--live` to scripts that create Orka or kagent resources or PortableAgent
   bundles, including native previews. Use `kmx create --live` for the existing

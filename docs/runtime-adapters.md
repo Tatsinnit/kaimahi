@@ -187,14 +187,15 @@ credentials. Runtime cancellation/history and target cleanup remain separate.
 ## Experimental wider interface model
 
 `pkg/kmx` is alpha, unwired design evidence, not a replacement for the production
-runtime contract. `AgentEnvironment`, `AgentSuites` and `AgentDeployments`
-separate target preparation, validation plus the initial image-backed build/push
-workflow, and workload placement. Image-free native execution profiles remain
-outside that first build contract. Member builders and OCI storage transports
-remain internal.
-Focused suite ports live in `internal/kmx/agentsuite`; platform/runtime ports
+runtime contract. Setup-only `AgentEnvironment`, `AgentSuites` and
+`AgentDeployments` separate logical environment establishment, validation plus
+the initial image-backed build/push workflow, and workload placement. An
+environment is not an exact deployment target or runtime selection. Image-free
+native execution profiles remain outside that first build contract. Member
+builders and OCI storage transports remain internal.
+Focused suite ports live in `internal/kmx/agentsuite`; deployment runtime ports
 and scoped receipt factories live in `internal/kmx/lifecycle`.
-Retirement receipts grant no target teardown authority. Read the
+Retirement receipts grant no environment teardown authority. Read the
 [lifecycle decision](kmx-lifecycle-interfaces.md) and
 [application API](kmx-application-api.md) for signatures, persistence and recovery
 boundaries. Concrete orchestration remains follow-up work.

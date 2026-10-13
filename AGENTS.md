@@ -127,6 +127,12 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md), the
 - A context supplies access. A target includes the selected runtime, cluster
   identity and namespace. Inference is independent. Unknown is not absent;
   ready is not answered or evaluated; retry is not result retrieval.
+- Experimental `pkg/kmx.AgentEnvironment` is setup-only and unwired:
+  `Up(EnvironmentSpec)` establishes a logical `Environment`, not a context,
+  exact target, runtime selection, inference binding or teardown authority.
+  Bare `kmx local up` is only its current conceptual mapping. Do not claim CLI
+  integration, inspection, persistence, recovery or down semantics until those
+  capabilities have production implementations and evidence.
 - Preserve historical release records and explicit compatibility tests when
   updating current examples. Do not bulk-rename historical text or serialized
   state. Generated recovery commands must preserve selectors and shell quoting.
