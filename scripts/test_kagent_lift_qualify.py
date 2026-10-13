@@ -121,15 +121,18 @@ class QualifyTests(unittest.TestCase):
                     target.update(state="drift", ready=False, detail="desired source or bindings differ from saved deployment")
                 return dict(receipt, bundle="lift-proof", runtime="kagent", runtimeVersion="v0.10.3", portableDigest="a" * 64, renderedDigest="b" * 64, targets=[target])
             def cli(argv, **kwargs):
+                self.assertEqual(argv[0], str(binary))
+                if argv[1] == "eval":
+                    self.assertEqual(argv[2], "diff")
+                    self.assertEqual(len(argv), 5, "diff requires two positional receipts, not flags")
+                    paths = [pathlib.Path(path) for path in argv[3:]]
+                    self.assertTrue(all(p.parent.name == "runs" for p in paths), "diff must compare archives, not overwritten latest")
+                    return subprocess.CompletedProcess(argv, 0, b"unchanged\n", b"")
+                self.assertEqual(argv[1], "bundle")
+                self.assertIn(argv[2], ("lift", "status", "evaluate"))
                 verb = argv[2]
                 if verb == "evaluate":
                     return evaluation(argv)
-                if verb == "eval":
-                    self.assertEqual(argv[3], "diff")
-                    self.assertEqual(len(argv), 6, "diff requires two positional receipts, not flags")
-                    paths = [pathlib.Path(path) for path in argv[4:]]
-                    self.assertTrue(all(p.parent.name == "runs" for p in paths), "diff must compare archives, not overwritten latest")
-                    return subprocess.CompletedProcess(argv, 0, b"unchanged\n", b"")
                 missing = not (work / "external-bindings.yaml").exists()
                 report = status() if not missing else None
                 refused = missing or (verb == "lift" and state["live"] and report["targets"][0]["state"] != "ready")

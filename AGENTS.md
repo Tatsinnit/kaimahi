@@ -15,22 +15,30 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md), the
   `kmx context use <context>`; canonical local setup/teardown commands are
   `kmx local up/down`. Root `ctx`, `up`, `down`, `lift` and `lift down`
   are removed outright, not compatibility routes or retirement stubs. Current
-  agent deployment remains `kmx agent lift`; current cloud and runtime setup
+  bundle deployment remains `kmx bundle lift`; current cloud and runtime setup
   remain `kmx aks up/down` and `kmx orka install/status`.
   The AKS group is a hidden compatibility route, not a public root domain.
   Guided quickstart is `kmx quickstart --interactive` (`-i`); the old wizard
-  command is a retirement stub. `kmx agent chat` is always interactive and no
+  command is a retirement stub. `kmx chat` is always interactive and no
   longer accepts `--interactive`. `kmx targets` is the read-only capability view.
   Plane administration, model overlays, migration and their demo are removed;
   do not restore or regroup their commands.
-- Opt-in `agent create --workspace` authors one tool-free native-Orka suite member
-  offline. One-reference `suite push` discovers the nearest ancestor `workspace.yaml`;
-  `--workspace` selects an exact root without fallback. Two-positional suite push
-  retains extracted-directory transfer without discovery. Workspace push names its
-  absolute root and prepared OCI manifest digest on stderr, then copies that exact
-  graph and authored cases. The native member image requirement is empty. Neither
-  command evaluates, deploys, builds images or loads cluster settings. Workspace
-  evaluation/release lift are not implemented. Preserve default create, PortableAgent formats and
+- Everyday operations are root `create/chat/run`; live inspection is `orka show/list`.
+  Legacy lifecycle operations are `bundle evaluate/lift/retire/verify/status`.
+  `kmx agent` is removed entirely, without an alias or retirement stub.
+  Root `status` and `orka status` retain the same table-only Orka runtime report;
+  do not add root bundle status or a suite observer.
+- Opt-in `create --workspace` authors one tool-free native-Orka suite member
+  offline; root `push [--workspace DIR] REF` discovers the nearest ancestor
+  `workspace.yaml`, or selects an exact root without fallback with `--workspace`.
+  Workspace push names its absolute root and prepared OCI manifest digest on
+  stderr, then copies that exact graph and authored cases.
+  `suite push DIRECTORY REFERENCE` remains extracted-directory transfer without
+  discovery and no longer accepts `--workspace`. The native member image
+  requirement is empty. Neither offline command evaluates, deploys, builds images
+  or loads cluster settings. Workspace evaluation/release lift are not implemented.
+  Create still defaults to live authoring; only explicit `--workspace` selects
+  offline authoring. Preserve PortableAgent formats and
   old extracted-directory suite transfer; do not treat public graph validation
   as native execution-profile validation. Private packaged-native preparation and
   ownership-safe Provider/Agent placement have no CLI or execution qualification.
@@ -43,19 +51,21 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md), the
   resources against legacy adoption, copying, bundle authorization and retirement.
   Registry workspace publication shares unsigned suite provenance defaults/flags and records Git source only from
   fingerprint-bound authored inputs matching HEAD; local layouts get no referrers.
-- Recorded-session case preparation is `kmx agent eval from-sessions`; execution
-  stays `kmx agent evaluate --from-sessions`. Keep reference manifests private,
-  require named candidate/judge confirmation before recorded-content transfer,
+- Root `eval` is a helper-only group: offline `eval diff` and recorded-session
+  case preparation via `kmx eval from-sessions`; execution stays
+  `kmx bundle evaluate --from-sessions`. Packaged root evaluation and digest lift
+  are not implemented; do not claim root `eval` executes or root `lift` exists.
+  Keep reference manifests private, require named candidate/judge confirmation before recorded-content transfer,
   and suppress answer/reasoning output unless `--show-content` is explicit.
   Expired sources are unknown, never a skip or export. Offline eval diff keeps
   missing Sessions case identity row-local unknown/nonzero; observed identity
   conflicts or no complete observed case identity in either receipt stay incompatible.
 - Keep **Create → Prove → Lift** as the local-to-remote story. **Lift** is the
-  chosen agent lifecycle verb: retain `kmx agent lift` and interactive `/lift`,
+  chosen agent lifecycle verb: retain `kmx bundle lift` and interactive `/lift`,
   and use Lift in corresponding help and menu labels rather than renaming the
   operation to deploy. Deployment remains a technical description of its effect.
-  Root `lift` is freed for a future suite lift workflow, but no new root
-  verb or suite lift command is implemented. Use `kmx aks up/down` for AKS.
+  Root `lift` is reserved for a future suite lift workflow, not implemented.
+  Use `kmx aks up/down` for AKS.
 - Prefer singular resource/domain groups and explicit actions. Avoid introducing
   another synonym for an existing operation. CLI, chat and console should use
   the same operation vocabulary where their scopes match.
@@ -82,16 +92,17 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md), the
 
 - Preserve Orka defaults and exact-v0.10.2 kagent create. Bundle lift/status
   requires explicit `--runtime kagent --runtime-version v0.10.3`, `--to-context`
-  and author-owned `KagentBindings`. Only Go deployment/status is qualified;
-  Python remains render-only. Explicit exact-v0.10.3 Go bundle evaluation uses
-  the saved placement and desired bindings; unsecure only, trusted-proxy refused
+  and author-owned `KagentBindings`. Only Go deployment/status/evaluation is
+  qualified; Python remains render-only. Explicit `kmx bundle evaluate --runtime
+  kagent --runtime-version v0.10.3` uses the saved placement and desired bindings;
+  unsecure only, trusted-proxy refused
   before any send. One fresh blocking native A2A Task per case, never retried,
   with attribution rechecked before judging. Ambiguity/drift stops later sends.
   Dedicated CI qualifies Go lift/status, native MCP and product evaluation;
   deployment receipts still prove readiness, not execution.
   Lift creates new objects or reuses a complete
   matching UID-bound receipt without adoption, update or retry of ambiguous
-  writes. Readiness is not execution proof. Offline `agent eval diff` reads
+  writes. Readiness is not execution proof. Offline `eval diff` reads
   strict v2 kagent Go receipts with native A2A identities; valid kagent evidence
   is excluded from Orka gate/status selection. This does not enable promotion gates or Python. Tool assertions stay unknown;
   structured upstream events are not qualified tool evidence. Do not infer

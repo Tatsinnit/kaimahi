@@ -146,6 +146,38 @@ func evaluationSends(t *testing.T, dir string) []kagentCall {
 	return sends
 }
 
+func TestKagentEvaluateGuardRetryUsesBundleRoute(t *testing.T) {
+	a, opt, dir := kagentEvaluateLiftFixture(t)
+	quotedBundle := filepath.Join(dir, "bundle's cases")
+	if err := os.Rename(opt.BundleDir, quotedBundle); err != nil {
+		t.Fatal(err)
+	}
+	opt.BundleDir = quotedBundle
+	bindings, err := os.ReadFile(filepath.Join(opt.BundleDir, "bindings.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	opt.Bindings = filepath.Join(dir, "owner's bindings.yaml")
+	if err := os.WriteFile(opt.Bindings, bindings, 0600); err != nil {
+		t.Fatal(err)
+	}
+	opt.ToNamespace, opt.Case = "agents", "one"
+	t.Setenv("KMX_KAGENT_TEST_SCENARIO", "remote-context")
+	err = a.EvaluateAgentBundle(opt)
+	want := "KAIMAHI_CONFIRM=kind-test kmx --context kind-test bundle evaluate '" + dir + "/bundle'\"'\"'s cases' --runtime kagent --runtime-version v0.10.3 --to-context kind-test --to-namespace agents --bindings '" + dir + "/owner'\"'\"'s bindings.yaml' --case one"
+	if err == nil || !strings.Contains(err.Error(), want) {
+		t.Fatalf("guard retry did not preserve the reachable route and quoted selectors: %v", err)
+	}
+	if len(evaluationSends(t, dir)) != 0 {
+		t.Fatal("unconfirmed remote evaluation sent a Task")
+	}
+	for _, disclosure := range []string{"full prompts/history/answers retained", "default unlimited retention", "Service-proxy request and response bodies"} {
+		if !strings.Contains(fmt.Sprint(a.Err), disclosure) {
+			t.Fatalf("guard lost privacy disclosure %q: %s", disclosure, a.Err)
+		}
+	}
+}
+
 func TestKagentEvaluateExactAnswerAndFreshIDs(t *testing.T) {
 	a, opt, dir := kagentEvaluateLiftFixture(t)
 	t.Setenv("KMX_KAGENT_TEST_SCENARIO", "eval-success")

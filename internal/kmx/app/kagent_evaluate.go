@@ -133,7 +133,7 @@ func (a *App) evaluateKagentBundle(opt EvaluateAgentBundleOptions) error {
 	if judge != nil {
 		worker.notef("Judge assertions separately send input, answer and rubric to the configured judge endpoint.")
 	}
-	args := []string{"agent", "evaluate", opt.BundleDir, "--runtime", "kagent", "--runtime-version", "v0.10.3", "--to-context", opt.ToContext, "--to-namespace", namespace}
+	args := []string{"bundle", "evaluate", opt.BundleDir, "--runtime", "kagent", "--runtime-version", "v0.10.3", "--to-context", opt.ToContext, "--to-namespace", namespace}
 	if opt.Bindings != "" {
 		args = append(args, "--bindings", opt.Bindings)
 	}

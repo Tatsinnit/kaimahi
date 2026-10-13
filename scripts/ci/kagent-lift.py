@@ -575,7 +575,7 @@ def product_evaluations(cli, binary, bundle, home, receipt, live, uid, images, f
         runs.append({"run_id": run_id, "full_case_set": not selected, "receipt_sha256": hash_bytes(raw), "cases": rows, "counts": counts})
         if len(runs) == 2:
             qualification_phase("offline-eval-diff")
-            result = subprocess.run([str(binary), "agent", "eval", "diff", str(next(iter(archives))), str(path)],
+            result = subprocess.run([str(binary), "eval", "diff", str(next(iter(archives))), str(path)],
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
             require(result.returncode == 0, "offline repeated evaluation diff failed", reason=cli_failure_reason(result.stderr))
             require(filesystem(bundle, home) == updated and http_json(fixture + "/evidence") == after,
@@ -695,7 +695,7 @@ def qualify(binary, work):
 
     def cli(verb, *extra, expected_refusal=None, with_bindings=True):
         selected = flags if with_bindings else flags[:-2]
-        result = subprocess.run([str(binary), "agent", verb, str(bundle), *selected, *extra],
+        result = subprocess.run([str(binary), "bundle", verb, str(bundle), *selected, *extra],
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=300)
         if expected_refusal is not None:
             lines = [line for line in result.stderr.splitlines() if line.strip()]

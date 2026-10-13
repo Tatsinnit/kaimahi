@@ -7,10 +7,13 @@ Orka authoring, Provider configuration, host inference, bundle lifecycle,
 AgentSuite validation and evaluation remain. Explicit kagent create targets
 preinstalled exact v0.10.2, optionally followed by one A2A message in that
 invocation. Explicit Go declarative bundle lift/status targets preinstalled exact
-v0.10.3, with new-object placement or matching UID-bound reuse. No installation,
-updates, adoption or later execution/evaluation/retirement surface is enabled.
-Root status delegates the Orka-only runtime report; bundle-aware agent status
-is separate.
+v0.10.3, with new-object placement or matching UID-bound reuse. Explicit
+receipt-bound Go bundle evaluation uses desired bindings and one fresh blocking
+A2A Task per case (unsecure only; trusted-proxy refused). No installation,
+updates, adoption, standalone chat/run, discovery, promotion gates, retirement
+or console support is enabled.
+Root `status` and `orka status` share the table-only Orka runtime report;
+`bundle status <bundle-dir>` is the separate deployment view, not a root observer.
 
 Plane commands, administration, model overlays, credential exchange and
 workload migration are removed, along with their source module, image-build
@@ -56,7 +59,7 @@ examples or fabricated callers are needed to preserve mechanical coverage.
 
 | Path | Class | Evidence |
 |---|---|---|
-| `cmd/kmx` (44 files) | **Installed** | Explicit context/local entry points and the hidden AKS compatibility group, native agent creation and execution, Orka install/status, quickstart and local setup, guarded AKS lifecycle, interactive console/chat, read-only runtime targets, offline AgentSuite validation and semantic artifact diffing with an incremental incident-response OCI e2e test, opt-in one-member native workspace authoring and exact prepared-suite publication with current-directory workspace discovery, without images/evaluation/lift, exact kagent v0.10.2 create and explicit v0.10.3 Go bundle lift/status/evaluate, Orka bundle lifecycle/evaluation and local-reference replay verification, typed evaluation assertions including explicitly configured two-sample `llmJudge`, multi-UID `agent eval from-sessions` extraction and `agent evaluate --from-sessions` fresh execution, offline v2 receipt comparison across revisions through `agent eval diff` with judge identity/score checks and exact-v0.10.3 Go kagent receipt reading (not promotion), agent-only replay with unverified judge counts, safe retirement and Task results. Root help describes creating and running agents on Kubernetes; root status reports only Orka. |
+| `cmd/kmx` (45 files) | **Installed** | Explicit context/local entry points and the hidden AKS compatibility group, root create/chat/run and workspace push, Orka install/status/show/list, quickstart and local setup, guarded AKS lifecycle, interactive console/chat, read-only runtime targets, offline AgentSuite validation and semantic artifact diffing with an incremental incident-response OCI e2e test, opt-in one-member native workspace authoring and exact prepared-suite publication with current-directory workspace discovery, without images/evaluation/lift, exact kagent v0.10.2 create and explicit v0.10.3 Go bundle lift/status/evaluate, Orka bundle lifecycle/evaluation and local-reference replay verification, typed evaluation assertions including explicitly configured two-sample `llmJudge`, multi-UID `eval from-sessions` extraction and `bundle evaluate --from-sessions` fresh execution, offline v2 receipt comparison across revisions through `eval diff` with judge identity/score checks and exact-v0.10.3 Go kagent receipt reading (not promotion), agent-only replay with unverified judge counts, safe retirement and Task results. Root help describes creating and running agents on Kubernetes; root status reports only Orka. |
 
 ## `agentsuite/` — public specification package
 
