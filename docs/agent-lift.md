@@ -11,9 +11,9 @@ is a separate [kagent path](#exact-v0103-declarative-bundle-placement).
 kagent create receipts do not authorize reuse by that path. Explicit
 [Go evaluation](#evaluating-exact-v0103-go-kagent) uses the saved v0.10.3
 placement. Console bundle actions and interactive `/lift` remain Orka-only.
-This is the legacy PortableAgent lifecycle, not packaged-suite lift; root digest
-`lift` and packaged root evaluation are not implemented. Root `eval` currently
-holds helpers only.
+This is the legacy PortableAgent lifecycle, not packaged-suite lift. Root
+workspace `eval` is a separate native Orka workflow; standalone packaged
+evaluation and root digest `lift` are not implemented.
 
 ```console
 kmx bundle lift <bundle-dir> --to-context <ctx> [--to-namespace <ns>] --inference provider:<name> [--require-evaluated <context>] [--override-gate "reason"] [--plan]

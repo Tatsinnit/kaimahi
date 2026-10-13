@@ -105,6 +105,15 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
 
 ### Changed
 
+- The repository front door now separates the stable v0.5.1 quickstart from the
+  unreleased suite-first development path, leads with a compact
+  Create/Prove/Publish/future-Lift table, names runtime boundaries explicitly,
+  and labels `agent.yaml` guidance as legacy. New developer-facing codebase and
+  interface guides document current package flows, command surfaces and the
+  setup-only `AgentEnvironment` boundary. README self-tests enforce the release
+  warning, table columns/order, full-pass evidence, non-deploying push and
+  unimplemented suite Lift.
+
 - `kmx bundle` (legacy `agent.yaml` lift, status, evaluate, retire, verify) is hidden from
   help and completion ahead of its removal; the commands still run.
 

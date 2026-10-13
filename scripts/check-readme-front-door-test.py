@@ -17,15 +17,16 @@ curl -fsSL https://raw.githubusercontent.com/kaimahi-agents/kaimahi/main/install
 # or
 go install github.com/kaimahi-agents/kaimahi/cmd/kmx@v0.5.1
 """
-JOURNEY = """`kmx quickstart` proves an answer.
-`kmx local up` provisions the runtime.
-`kmx quickstart --interactive` creates your own Agent.
-`kmx create` authors a workspace member offline.
-`kmx create --live` creates resources and a bundle on a prepared target.
-`kmx run` proves one Task answer.
-`kmx chat` opens an interactive session.
-`kmx push` publishes a prepared workspace.
-See the [bundle lift guide](docs/agent-lift.md).
+WARNING = """> [!NOTE]
+> The table below describes the current development build, which is unreleased.
+> The latest tagged release is v0.5.1 and still uses `kmx agent ...`.
+"""
+JOURNEY = WARNING + """| Stage | Current development build |
+|---|---|
+| **Create** | `kmx create NAME --workspace DIR` authors source. |
+| **Prove** | `kmx eval --workspace DIR` stops later cases after the first non-pass and writes evidence only when all cases pass. |
+| **Publish** | `kmx push --workspace DIR --evaluation RECEIPT REF` copies the suite. Plain `kmx push REF` remains explicitly unevaluated. Neither form deploys. |
+| **Lift** | **Not implemented for AgentSuites on current `main`.** Legacy bundle lift is separate. |
 """
 GOOD = """<img src="brand/ketu.svg" alt="Kaimahi ketu mark">
 **Agent Builder CLI for Kubernetes.**
@@ -33,56 +34,45 @@ GOOD = """<img src="brand/ketu.svg" alt="Kaimahi ketu mark">
 [![Release](https://img.shields.io/github/v/release/kaimahi-agents/kaimahi)](https://github.com/kaimahi-agents/kaimahi/releases)
 [![License](https://img.shields.io/github/license/kaimahi-agents/kaimahi)](LICENSE)
 ## Create, Prove, Lift
+""" + JOURNEY + """## One Fresh Answer
 ```bash
 """ + INSTALL + """```
 ```bash
+kmx version
 kmx quickstart
 ```
-""" + JOURNEY + """## Quickstart
-The wizard offers an interactive path.
-## Runtime Contract
-Runtimes own execution.
-## Status
-Limitations.
-## Documentation
-Links.
-## Development
-Build.
+## Workspace And Live Paths
+Workspace and live paths differ.
+## Runtime Boundaries
+- **Orka** is the default runtime and owns workspace evaluation/evaluated-publication, live create, run, chat and the legacy bundle lifecycle.
+- **kagent** support is exact-version: v0.10.2 live create; v0.10.3 Go workspace authoring/publication and legacy bundle lift/status/evaluation. Public suite evaluation, lift and status are not available.
+- **agentsessions** is evaluation and replay integration for the legacy bundle path, not a KMX deployment target.
+## Safety And Status
 > [!IMPORTANT]
 > **Kaimahi is experimental and under active development.** Interfaces may change.
 > [!NOTE]
 > kmx is the Agent Builder and lifecycle layer, not a runtime or generic
 > governance control plane.
+## Guides
+[Legacy PortableAgent bundle lifecycle](docs/agent-lift.md)
+## Development
+[developer guide](docs/development.md)
+[codebase overview](docs/codebase-overview.md)
+[interface baseline](docs/interface-baseline.md)
+[repository map](docs/repository-map.md)
 """
 
-TABLE_JOURNEY = """| Command | Purpose |
-|---|---|
-| `kmx local up` | Provision the runtime. |
-| `kmx quickstart --interactive` | Create your own Agent. |
-| `kmx create` | Author a workspace member offline. |
-| `kmx create --live` | Create resources and a bundle. |
-| `kmx run` | Prove one Task answer. |
-| `kmx chat` | Open an interactive session. |
-| `kmx push` | Publish a prepared workspace. |
-See the [bundle lift guide](docs/agent-lift.md).
-"""
-TABLE_GOOD = GOOD.replace(JOURNEY, TABLE_JOURNEY)
-
-CASES = [
-    ("valid front door", GOOD, None),
-    ("valid command table", TABLE_GOOD, None),
-    ("command in purpose column only", TABLE_GOOD.replace("| `kmx create` |", "| Author | `kmx create`"), "kmx create is missing"),
-    ("table commands out of order", TABLE_GOOD.replace("| `kmx run` | Prove one Task answer. |\n", "").replace("| `kmx create --live` |", "| `kmx run` | Prove one Task answer. |\n| `kmx create --live` |"), "kmx run is missing"),
-]
+CASES = [("valid front door", GOOD, None)]
 for label, literal in [
     ("ketu icon", '<img src="brand/ketu.svg" alt="Kaimahi ketu mark">\n'),
     ("product line", "**Agent Builder CLI for Kubernetes.**\n"),
     ("journey heading", "## Create, Prove, Lift\n"),
-    ("Quickstart heading", "## Quickstart\n"),
-    ("runtime contract heading", "## Runtime Contract\n"),
-    ("Status heading", "## Status\n"),
-    ("documentation heading", "## Documentation\n"),
-    ("Development heading", "## Development\n"),
+    ("first-answer heading", "## One Fresh Answer\n"),
+    ("workspace/live heading", "## Workspace And Live Paths\n"),
+    ("runtime boundaries heading", "## Runtime Boundaries\n"),
+    ("safety/status heading", "## Safety And Status\n"),
+    ("guides heading", "## Guides\n"),
+    ("development heading", "## Development\n"),
     ("experimental notice", "> [!IMPORTANT]\n> **Kaimahi is experimental and under active development.** Interfaces may change.\n"),
     ("runtime ownership note", "> [!NOTE]\n> kmx is the Agent Builder and lifecycle layer, not a runtime or generic\n> governance control plane.\n"),
     ("CI badge", "actions/workflows/ci.yml/badge.svg?branch=main"),
@@ -90,42 +80,45 @@ for label, literal in [
     ("license badge", "img.shields.io/github/license/kaimahi-agents/kaimahi"),
 ]:
     CASES.append((f"missing {label}", GOOD.replace(literal, ""), f"{label} is missing"))
+
 for label, literal in [
     ("Homebrew install", "brew install kaimahi-agents/tap/kmx\n"),
     ("release installer", "curl -fsSL https://raw.githubusercontent.com/kaimahi-agents/kaimahi/main/install.sh | sh\n"),
     ("pinned Go install", "go install github.com/kaimahi-agents/kaimahi/cmd/kmx@v0.5.1\n"),
+    ("kmx version", "kmx version\n"),
     ("kmx quickstart", "kmx quickstart\n"),
 ]:
     CASES.append((f"missing {label}", GOOD.replace(literal, ""), f"{label} is missing"))
-for label, literal in [
-    ("kmx local up", "`kmx local up`"),
-    ("kmx quickstart --interactive", "`kmx quickstart --interactive`"),
-    ("kmx create", "`kmx create`"),
-    ("kmx create --live", "`kmx create --live`"),
-    ("kmx run", "`kmx run`"),
-    ("kmx chat", "`kmx chat`"),
-    ("kmx push", "`kmx push`"),
-]:
-    CASES.append((f"missing {label}", GOOD.replace(literal, ""), f"{label} is missing"))
-    CASES.append((f"table missing {label}", TABLE_GOOD.replace(literal, ""), f"{label} is missing"))
+
 CASES += [
+    ("command in purpose column only", GOOD.replace("| **Create** | `kmx create", "| Author | **Create** with `kmx create"), "Create row is missing"),
+    ("suite rows out of order", GOOD.replace("| **Create** |", "| **TEMP** |").replace("| **Prove** |", "| **Create** |").replace("| **TEMP** |", "| **Prove** |"), "Create row is missing"),
+    ("missing eval", GOOD.replace("`kmx eval --workspace DIR`", "`kmx run`"), "Prove row is missing"),
+    ("partial evidence accepted", GOOD.replace("only when all cases pass", "after any case"), "Prove row must require a full pass"),
+    ("later cases continue after failure", GOOD.replace("stops later cases after the first non-pass", "continues through every case"), "Prove row must preserve fail-fast execution"),
+    ("push implies deployment", GOOD.replace("Neither form deploys", "Then it deploys"), "Publish row must say it does not deploy"),
+    ("plain push treated as evaluated", GOOD.replace("Plain `kmx push REF` remains explicitly unevaluated. ", ""), "Publish row must keep plain push unevaluated"),
+    ("executable future lift", GOOD.replace("Legacy bundle lift is separate.", "Run `kmx lift REF`."), "suite lift is not implemented"),
+    ("late release warning", GOOD.replace(WARNING, "").replace("| **Lift** | **Not implemented for AgentSuites on current `main`.** Legacy bundle lift is separate. |", "| **Lift** | **Not implemented for AgentSuites on current `main`.** Legacy bundle lift is separate. |\n" + WARNING.rstrip()), "release/main warning must precede"),
+    ("stable table label", GOOD.replace("| Stage | Current development build |", "| Stage | Latest stable release |"), "exact two-column header"),
+    ("malformed table separator", GOOD.replace("|---|---|", "|---|"), "separator is missing or malformed"),
+    ("extra suite row", GOOD.replace("| **Lift** |", "| **Inspect** | Future status. |\n| **Lift** |"), "exactly four rows"),
+    ("extra table column", GOOD.replace("| **Create** | `kmx create NAME --workspace DIR` authors source. |", "| **Create** | `kmx create NAME --workspace DIR` authors source. | extra |"), "exactly two columns"),
+    ("generic legacy guide", GOOD.replace("Legacy PortableAgent bundle lifecycle", "Lift operation guide"), "agent-lift links must be labeled"),
+    ("Orka suite support broadened", GOOD.replace("owns workspace evaluation/evaluated-publication", "owns every suite operation"), "Orka default is missing"),
+    ("wrong kagent version", GOOD.replace("v0.10.3 Go", "v1.0 Python"), "kagent version boundary is missing"),
+    ("kagent suite lift claimed", GOOD.replace("Public suite evaluation, lift and status are not available.", "Public suite lift is available."), "kagent version boundary is missing"),
+    ("agentsessions deployment claimed", GOOD.replace("not a KMX deployment target", "a KMX deployment target"), "agentsessions boundary is missing"),
     ("wrong tap", GOOD.replace("kaimahi-agents/tap/kmx", "other/tap/kmx"), "Homebrew install is missing"),
     ("moving Go source", GOOD.replace("cmd/kmx@v0.5.1", "cmd/kmx@main"), "pinned Go install is missing"),
     ("old Go release", GOOD.replace("cmd/kmx@v0.5.1", "cmd/kmx@v0.5.0"), "pinned Go install is missing"),
     ("wrong installer", GOOD.replace("kaimahi/main/install.sh", "other/main/install.sh"), "release installer is missing"),
-    ("quickstart after suffix", GOOD.replace("kmx quickstart\n", "kmx quickstart-old\n"), "kmx quickstart is missing"),
-    ("legacy Go quickstart chaining", GOOD.replace("cmd/kmx@v0.5.1\n", "cmd/kmx@v0.5.1 && kmx quickstart\n"), "pinned Go install is missing"),
-    ("lift guide not required in command overview", GOOD.replace("See the [bundle lift guide](docs/agent-lift.md).\n", ""), None),
-    ("journey missing first block", GOOD.replace("```bash\n" + INSTALL + "```\n", ""), "Homebrew install is missing"),
-    ("journey missing second block", GOOD.replace("```bash\nkmx quickstart\n```\n", ""), "kmx quickstart is missing"),
-    ("journey commands in prose only", GOOD.replace("```bash\nkmx quickstart\n```\n", "kmx quickstart\n"), "kmx quickstart is missing"),
-    ("root commands out of order", GOOD.replace("`kmx create --live` creates resources and a bundle on a prepared target.\n`kmx run` proves one Task answer.", "`kmx run` proves one Task answer.\n`kmx create --live` creates resources and a bundle on a prepared target."), "kmx run is missing"),
-    ("runtime flag cannot replace live mode", GOOD.replace("`kmx create --live`", "`kmx create --runtime kagent`"), "kmx create --live is missing"),
-    ("removed agent group cannot replace root create", GOOD.replace("`kmx create`", "`kmx agent create`"), "kmx create is missing"),
-    ("pending packaged eval cannot replace root run", GOOD.replace("`kmx run`", "`kmx eval`"), "kmx run is missing"),
-    ("pending packaged lift cannot replace publication", GOOD.replace("`kmx push`", "`kmx lift`"), "kmx push is missing"),
-    ("headings out of order", GOOD.replace("## Status\nLimitations.\n## Documentation\nLinks.", "## Documentation\nLinks.\n## Status\nLimitations."), "documentation heading is missing"),
     ("install routes out of order", GOOD.replace("brew install kaimahi-agents/tap/kmx\n# or\ncurl", "curl").replace("install.sh | sh\n# or\ngo install", "install.sh | sh\n# or\nbrew install kaimahi-agents/tap/kmx\n# or\ngo install"), "release installer is missing"),
+    ("first answer out of order", GOOD.replace("kmx version\nkmx quickstart", "kmx quickstart\nkmx version"), "kmx quickstart is missing"),
+    ("missing developer guide", GOOD.replace("[developer guide](docs/development.md)\n", ""), "developer guide link is missing"),
+    ("missing codebase overview", GOOD.replace("[codebase overview](docs/codebase-overview.md)\n", ""), "codebase overview link is missing"),
+    ("missing interface baseline", GOOD.replace("[interface baseline](docs/interface-baseline.md)\n", ""), "interface baseline link is missing"),
+    ("missing repository map", GOOD.replace("[repository map](docs/repository-map.md)\n", ""), "repository map link is missing"),
     ("empty document", "", "ketu icon is missing"),
 ]
 

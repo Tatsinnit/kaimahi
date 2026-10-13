@@ -43,11 +43,13 @@ capabilities. Preserve Orka defaults and v0.10.2 create; runtime choice remains
 distinct from model-provider choice.
 Wider cross-runtime lifecycle remains unsupported.
 
-New to the codebase? [`docs/development.md`](docs/development.md) covers the
-architecture, the build, and the mistakes that are easy to make here, and
-[`docs/repository-map.md`](docs/repository-map.md) says which parts of the
-tree are current tooling, historical compatibility data or test support — worth
-reading before you change something you found by grepping.
+New to the codebase? Start with the
+[`codebase overview`](docs/codebase-overview.md) for architecture and data flows,
+then [`development`](docs/development.md) for the build and operational traps.
+The [`interface baseline`](docs/interface-baseline.md) pins current commands and
+alpha Go boundaries, while the [`repository map`](docs/repository-map.md) says
+which parts of the tree are current tooling, historical compatibility data or
+test support. Read them before changing something found by grepping.
 
 ## Local verification
 

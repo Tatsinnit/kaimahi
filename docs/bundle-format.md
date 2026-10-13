@@ -1,6 +1,6 @@
-# Bundle format compatibility
+# PortableAgent and AgentSuite format compatibility
 
-A bundle's portable definition is `agent.yaml`; `bindings.yaml` describes its
+The legacy PortableAgent bundle's definition is `agent.yaml`; `bindings.yaml` describes its
 creation target, `eval/*.yaml` holds optional tests, `lift-policy.yaml` can
 require evaluation before lift, and `receipts/` holds local deployment and
 evaluation evidence. kmx is pre-1.0: these are the rules of the
@@ -13,17 +13,19 @@ These inputs are not interchangeable:
 
 | Format | Files / example | Use it with |
 |---|---|---|
-| Portable YAML bundle | `agents/my-agent/agent.yaml`, `bindings.yaml` and `eval/*.yaml`, created by `kmx create --live` | `kmx bundle lift`, `bundle status` and `bundle evaluate`. The [CI eval action](agent-lift.md#run-evals-in-ci) takes this bundle directory, not an image. Runtime-specific limits still apply. |
-| Extracted AgentSuite definition | `agentsuite.json` and referenced JSON manifests, such as the tool-free incident-analyst fixture | `kmx suite validate`, `push` and `pull`. Use incident-analyst for the [experimental build example](kmx.md#experimental-agentsuite-image-build). |
-| AgentSuite OCI artifact / layout | The packaged definition distributed by `kmx suite push` and recovered by `kmx suite pull` | Distribution and offline format validation. This is not a runnable sandbox image. See the [AgentSuite specification](../agentsuite/spec.md). |
+| Editable workspace source | `workspace.yaml`, `agents/ID/member.yaml`, instructions, build profile and `eval/*.yaml`, created by default `kmx create` | Root `kmx eval` for native Orka and root `kmx push [--evaluation FILE] REF` for exact OCI publication. It is not an `agent.yaml` bundle, and run/chat or legacy bundle commands do not consume it. |
+| Legacy PortableAgent YAML bundle | `agents/my-agent/agent.yaml`, `bindings.yaml` and `eval/*.yaml`, created by `kmx create --live` | Hidden `kmx bundle lift/status/evaluate/retire`. The [CI eval action](agent-lift.md#run-evals-in-ci) takes this bundle directory, not a workspace or image. Runtime-specific limits still apply. |
+| Agentsessions evaluation receipt | Private payload-free JSON written by `kmx bundle evaluate --sessions ...` | `kmx bundle verify RECEIPT --sessions HOST` reconstructs reference evidence without another model call. It does not read a bundle directory or verify judge outcomes. |
+| Extracted AgentSuite definition | `agentsuite.json` and referenced JSON manifests, such as the tool-free incident-analyst fixture | `kmx suite validate DIRECTORY`, `kmx suite diff LEFT RIGHT`, `kmx suite push DIRECTORY REFERENCE`, and `kmx suite pull REFERENCE --output DIRECTORY`. Root `kmx push` is workspace-aware and takes only a destination reference. Use incident-analyst for the [experimental build example](kmx.md#experimental-agentsuite-image-build). |
+| AgentSuite OCI artifact / layout | The packaged definition distributed by root `kmx push` or `kmx suite push`, and recovered by `kmx suite pull` | Distribution, exact-digest reads and offline format validation. Internal native Lift planning is read-only; there is no root suite `lift`. This is not a runnable sandbox image. See the [AgentSuite specification](../agentsuite/spec.md). |
 | Sandbox image archive | `incident-analyst.oci.tar`, produced by the experimental `kmx suite build` example | Docker import and container serving under that example's image-store and inference prerequisites. It is not the YAML input to `bundle evaluate` or the CI action, and current builder output is not AgentSuite-conformant. |
 
 The specification's [coordinator-workers fixture](../agentsuite/testdata/coordinator-workers/)
 illustrates invocation edges. It is a format-validation example, not a build
 example for today's tool-free AgentKit adapter. A valid Suite can use features
 that this narrow builder does not support; validation is not a promise that it
-can build or run that Suite. Neither example converts an `agent.yaml` bundle
-into an AgentSuite.
+can build or run that Suite. A workspace is resolved directly into an
+AgentSuite; there is no converter from legacy `agent.yaml` bundles.
 
 ## What a reader accepts
 

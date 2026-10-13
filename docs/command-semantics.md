@@ -147,8 +147,9 @@ unknown, drift, cancellation or output error stops later sends. No package
 reference, subset, judge or content output is accepted. `push --evaluation FILE`
 checks strict private receipt coherence and exact manifest S before publication;
 ordinary push is unevaluated. Receipts are unsigned observations, not policy gates.
-Hermetic command/Task tests do not qualify real native CLI execution. Reference
-lift remains unavailable. See [suite workspace](suite-workspace.md).
+Hermetic command/Task tests alone do not qualify real execution; the existing
+Orka shard separately qualifies one fixed two-case native workspace scenario.
+Reference lift remains unavailable. See [suite workspace](suite-workspace.md).
 
 ## Vocabulary
 

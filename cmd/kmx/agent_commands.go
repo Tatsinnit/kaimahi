@@ -80,7 +80,8 @@ has a one-member limit: use a new --workspace directory for another member.
 Without a workspace, a visible terminal can confirm initialization in the current
 directory. Scripts must pass --workspace <directory> to initialize explicitly.
 No cluster settings are loaded, no image is built and no Agent is deployed.
-Workspace evaluation and release lift are not yet available.
+Root eval can prove the exact native Orka workspace on a prepared target;
+release-reference lift is not yet available.
 
 Use --live for direct Orka or kagent resources, including bundle/YAML previews.
 It bypasses workspace discovery and conflicts with --workspace. All live-only

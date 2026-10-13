@@ -267,8 +267,8 @@ func newSuitePushCommand(state *commandState, workspaceMode bool) *cobra.Command
 	}
 	if workspaceMode {
 		push.Use = "push [--workspace <directory>] <reference>"
-		push.Short = "Push a native-Orka workspace to an OCI layout or registry"
-		push.Long = "Prepare one native-Orka workspace member and its authored cases, then copy that exact OCI graph.\n" +
+		push.Short = "Push a native workspace to an OCI layout or registry"
+		push.Long = "Prepare one native workspace member and its authored cases, then copy that exact OCI graph.\n" +
 			"Pass only the destination reference as a positional argument. Discover the nearest ancestor workspace.yaml from the current directory, or select an exact root without fallback with --workspace <directory>.\n" +
 			"Stderr names the absolute workspace path and prepared OCI manifest digest. No member images are required; this does not deploy or evaluate an Agent.\n" +
 			"--evaluation consumes a private full-passing native receipt file and refuses a different exact suite manifest or incoherent case inventory before transfer. Unsigned observations are not authentication or a policy gate.\n\n" + push.Long

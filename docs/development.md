@@ -4,20 +4,30 @@ For work **on** Kaimahi; contribution/PR expectations are in
 [CONTRIBUTING.md](../CONTRIBUTING.md). For use, start with
 [getting started](getting-started.md) and [Orka](orka.md).
 
+New contributors should read the [codebase overview](codebase-overview.md) for
+package boundaries and data flows, then the [interface baseline](interface-baseline.md)
+before changing commands or public contracts. The [repository map](repository-map.md)
+is the mechanical inventory of what is installed, embedded, historical or test
+scaffolding.
+
 ## Direction and current implementation
 
 **Orka remains the first-class/default platform.** Kaimahi tooling helps
-agents get onto it. Default `kmx create <name>` authors one native-Orka
-workspace member offline, requiring an exact model and an instructions file.
+agents get onto it. Default `kmx create <name>` authors one native workspace
+member offline, requiring an exact model and an instructions file; Orka is the
+default, while `--runtime kagent` selects the exact v0.10.3 Go profile.
 Create and push share workspace discovery; exact `--workspace` initializes
 without prompting. Resource/bundle creation, including previews and the no-name
 wizard, requires `kmx create --live`. Quickstart and console stay live.
-The explicit kagent path is intentionally narrower: create against preinstalled exact v0.10.2,
-and Go declarative bundle lift/status against preinstalled exact v0.10.3.
-There is no installer, upgrade, discovery, standalone chat or evaluation.
+The explicit kagent path is intentionally narrower: live create against
+preinstalled exact v0.10.2, and Go declarative legacy bundle
+lift/status/evaluation against preinstalled exact v0.10.3. There is no
+installer, upgrade, discovery, standalone chat/run or suite evaluation.
 It is not a conversion to Orka; see the
-[safety contract](kmx.md#kmx-create). `orka.harness.v2` is outside the
-direction. Runtimes and harnesses own execution, enforcement and model access.
+[safety contract](kmx.md#kmx-create). KMX installs Orka's chart in
+`harness-v2` controller mode but does not implement the upstream
+`orka.harness.v2` harness ABI. Runtimes and harnesses own execution,
+enforcement and model access.
 
 Plane CLI administration, model overlays, credential exchange and workload
 migration are removed, together with the nested source module, image-build
@@ -82,9 +92,15 @@ classification.
 | `.github/workflows/` | verification jobs and docs-only routing |
 
 The root CLI is the only Go module. Plain `make` builds `bin/kmx` only. The supported
-kagent surface is version-qualified create or declarative bundle lift/status,
+kagent surface is version-qualified create or declarative legacy bundle lift/status/evaluation,
 not a general legacy-YAML conversion layer. One production LifecycleAdapter
 owns both profiles; experimental public ports remain unwired.
+
+For a narrative architecture view, including workspace preparation, native
+evaluation, OCI publication and legacy bundle separation, use the
+[codebase overview](codebase-overview.md). For the current visible and hidden
+command tree plus `pkg/kmx` method sets, use the
+[interface baseline](interface-baseline.md).
 
 ## Build and verify
 
@@ -171,7 +187,7 @@ creation. `kmx status` is the Orka-only runtime report; bundle-aware
 status's table-only runtime contract; no root bundle or suite observer is added.
 
 KMX never installs or upgrades kagent. Explicit create targets exact v0.10.2;
-explicit bundle lift/status uses `--runtime kagent --runtime-version v0.10.3`,
+explicit bundle lift/status/evaluation uses `--runtime kagent --runtime-version v0.10.3`,
 `--to-context` and validated `KagentBindings`. The normal development loop remains
 Orka; the profiles never fall back between installed runtimes.
 

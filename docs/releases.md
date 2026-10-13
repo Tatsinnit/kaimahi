@@ -200,20 +200,26 @@ Current development builds also remove the entire `kmx agent` group, without
 aliases or stubs: use root `create/chat/run`, `orka show/list`, legacy
 `bundle evaluate/lift/retire/verify/status` and root `eval diff/from-sessions`
 helpers. Root `status` remains the table-only Orka runtime report, also available
-as `orka status`. Workspace publication moves from one-reference `suite push`
-to root `push [--workspace DIR] REF`, which discovers the nearest ancestor
-`workspace.yaml`; `--workspace` selects an exact root without fallback.
-Default `create <name>` now authors one native-Orka workspace member offline,
-requiring an exact model and an instructions file. Create and push share
-nearest-ancestor discovery; explicit `--workspace DIR` selects/initializes an
-exact root without prompting. Terminal initialization asks `Start one here? [Y/n]`;
+as `orka status`.
+
+Current main also adds the unreleased workspace path: default `create <name>`
+authors one native workspace member offline, root `eval` runs authored native
+Orka cases in order against a separately prepared target and stops later cases
+after the first non-pass, and root `push
+[--workspace DIR] REF` publishes the exact prepared OCI graph. `push
+--evaluation FILE` requires full-passing evidence for that exact manifest.
+Standalone package-reference evaluation and root digest `lift` are not
+implemented. Create, eval and push share nearest-ancestor discovery; explicit
+`--workspace DIR` selects an exact root without fallback and create initializes
+it without prompting. Terminal initialization asks `Start one here? [Y/n]`;
 nonterminal use needs `--workspace`. Invalid markers and a second member refuse
-without modifying source. Scripts that create resources or PortableAgent bundles
-must add `--live` for both runtimes, including `--no-apply`, `--dry-run` and
-`--out -` previews. `--runtime kagent` alone is not a compatibility route.
-Use `kmx create --live` for the live Orka wizard; quickstart and console stay
-live. See [workspace authoring](suite-workspace.md). Root `eval` does not execute
-packaged cases, and root digest `lift` is not implemented.
+without modifying source.
+
+Scripts that create resources or PortableAgent bundles must add `--live` for
+both runtimes, including `--no-apply`, `--dry-run` and `--out -` previews.
+`--runtime kagent` alone is not a compatibility route. Use `kmx create --live`
+for the live Orka wizard; quickstart and console stay live. See [workspace
+authoring, evaluation and publication](suite-workspace.md).
 See the [exact old/new mapping](../CHANGELOG.md#upgrading) and
 [command alignment](command-semantics.md) for the removal policy.
 
