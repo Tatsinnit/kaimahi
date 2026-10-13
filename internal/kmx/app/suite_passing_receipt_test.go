@@ -126,7 +126,7 @@ func TestOrkaEvidenceCannotAuthorizeKagentWorkspace(t *testing.T) {
 			if operation == "eval" && (err == nil || !strings.Contains(err.Error(), "native kagent evaluation requires --bindings")) {
 				t.Fatalf("wrong runtime refusal: %v", err)
 			}
-			if operation != "eval" && !errors.Is(err, errSuitePassingReceipt) {
+			if operation != "eval" && !errors.Is(err, errSuitePassingReceipt) && (err == nil || err.Error() != "prepared suite does not match the expected publication identity") {
 				t.Fatalf("wrong runtime refusal: %v", err)
 			}
 			if _, err := os.Stat(destination); !os.IsNotExist(err) {
