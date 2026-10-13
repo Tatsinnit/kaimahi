@@ -59,7 +59,7 @@ Hidden but callable:
 Removed outright: `kmx agent`, root `ctx`, `up`, `down`, the former
 AKS-provisioning meaning of root `lift`, and `lift down`. They are not
 compatibility aliases. Root `lift <ref>@<digest>` is now the distinct deploy-only
-one-member native Orka suite operation.
+one-member packaged native Orka/exact-v0.10.3 Go kagent operation.
 
 ## Everyday object flow
 
@@ -77,7 +77,7 @@ Workspace --create/eval--> AgentSuite artifact --push--> OCI location
 | `create` | Workspace | Author one offline member; no cluster or model call |
 | `eval` | Workspace/prepared AgentSuite | Place exact packaged Orka or exact-v0.10.3 Go kagent content, run cases in order, and stop later cases after the first non-pass |
 | `push` | Prepared AgentSuite | Transfer exact OCI graph; optional full-passing receipt check; no deployment |
-| `lift` | Exact packaged native Orka AgentSuite | Deploy by immutable digest with explicit private evidence, target and inference; GET-only with `--plan` |
+| `lift` | Exact supported packaged native AgentSuite | Deploy by immutable digest with explicit private evidence and target; Orka uses `--inference`, kagent uses `--bindings`; GET-only with `--plan` |
 | `create --live` | Runtime resources + PortableAgent bundle | Explicit legacy/live path |
 | `run`, `chat` | Existing live Orka Agent | One Task or interactive session; never workspace execution |
 | `status`, `orka status` | Orka installation | Table-only runtime report, not suite deployment status |
@@ -120,7 +120,7 @@ or deploy a runtime.
 |---|---|
 | Orka | Default runtime; setup, live create, run/chat, workspace evaluation/evaluated publication, exact-digest native Lift, and legacy bundle lifecycle |
 | kagent v0.10.2 | Explicit live create and optional one-shot A2A only; KMX does not install it |
-| kagent v0.10.3 Go | Workspace authoring, packaged evaluation and evaluated publication; legacy bundle lift/status/evaluation; no suite Lift/status/gates |
+| kagent v0.10.3 Go | Workspace authoring, packaged evaluation/evaluated publication and create-only root digest Lift; legacy bundle lift/status/evaluation; no packaged status/retirement |
 | agentsessions | Legacy bundle evaluation and zero-call reference replay only; no KMX deployment lifecycle |
 
 Support is operation- and version-specific. See the [runtime support

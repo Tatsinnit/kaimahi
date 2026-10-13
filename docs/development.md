@@ -21,9 +21,10 @@ without prompting. Resource/bundle creation, including previews and the no-name
 wizard, requires `kmx create --live`. Quickstart and console stay live.
 The explicit kagent path is intentionally narrower: live create against
 preinstalled exact v0.10.2, and Go declarative legacy bundle
-lift/status/evaluation plus packaged workspace evaluation/evaluated push against
+lift/status/evaluation plus packaged workspace evaluation/evaluated push and
+create-only root digest Lift against
 preinstalled exact v0.10.3. There is no installer, upgrade, discovery,
-standalone chat/run or suite lift/status/gates.
+standalone chat/run or packaged status/retirement.
 It is not a conversion to Orka; see the
 [safety contract](kmx.md#kmx-create). KMX installs Orka's chart in
 `harness-v2` controller mode but does not implement the upstream
@@ -77,9 +78,11 @@ Private command captures are never artifacts; only passing receipt metadata and
 a scalar qualification report are uploaded. A successful run qualifies the fixed
 two-case native workspace scenario; hermetic tests alone do not establish runtime
 execution. Root digest Lift separately consumes the private passing receipt for
-deploy-only native Orka placement. Its command/apply tests are hermetic; root Lift
-is not currently qualified against a real cluster. Standalone packaged evaluation
-is unavailable.
+deploy-only packaged Orka/kagent placement. The fixed Orka qualifier proves exact
+registry/local-layout reuse with source withheld, but not promotion, absent CLI
+creation or partial outcomes. The kagent qualifier proves source-free Lift into a
+fresh namespace and occupied repeat refusal without additional native execution.
+Standalone packaged evaluation is unavailable.
 
 ## Repository layout
 
@@ -96,8 +99,8 @@ classification.
 
 The root CLI is the only Go module. Plain `make` builds `bin/kmx` only. The
 supported kagent surface is version-qualified create, declarative legacy bundle
-lift/status/evaluation, and packaged workspace evaluation/evaluated push through
-the private App seam, not a general legacy-YAML conversion layer. One production
+lift/status/evaluation, and packaged workspace evaluation/evaluated push plus
+create-only digest Lift through private App seams, not a general legacy-YAML conversion layer. One production
 LifecycleAdapter owns the legacy profiles; experimental public ports remain unwired.
 
 For a narrative architecture view, including workspace preparation, native
@@ -305,7 +308,9 @@ with one actual tool call, two model calls and one terminal answer. Only identit
 counts and hashes enter its private qualification artifact; readiness receipts
 remain separate. A packaged two-case workspace phase separately requires root
 `eval --bindings`, runtime-specific private evidence, self-diff and evaluated
-local-layout push, plus occupied-target and stale-evidence refusals. It emits only
+local-layout push and stale-evidence refusal, then source-free digest Lift into a
+fresh namespace with GET-only planning, ordered creation, ready identity proof
+and occupied repeat refusal without extra native traffic. It emits only
 payload-free `suite-qualification.json`. Python deployment, managed clusters and
 hosted providers remain unqualified.
 

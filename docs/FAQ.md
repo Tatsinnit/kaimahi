@@ -50,8 +50,9 @@ qualifies Go lift/status/evaluation and a separate one-shot native A2A tool
 answer. See [exact-version placement](agent-lift.md#exact-v0103-declarative-bundle-placement).
 The packaged exact-v0.10.3 Go workspace profile also supports root
 `eval --bindings FILE`, runtime-specific full-passing evidence, evaluated push,
-and same-runtime offline receipt comparison. Standalone chat/run, suite
-lift/status/gates, list/show, console,
+same-runtime offline receipt comparison and create-only root digest Lift. Any
+occupied target refuses, even with matching evaluated UIDs. Standalone chat/run,
+packaged status/retirement, list/show, console,
 interactive `/lift`, quickstart, `local up`, installer and AKS payload remain unsupported. Historical AKS lift records
 remain teardown-only. See the [create contract](kmx.md#explicit-kagent-v0102-create).
 

@@ -26,7 +26,7 @@ JOURNEY = WARNING + """| Stage | Current development build |
 | **Create** | `kmx create NAME --workspace DIR` authors source. |
 | **Prove** | `kmx eval --workspace DIR` stops later cases after the first non-pass and writes evidence only when all cases pass. |
 | **Publish** | `kmx push --workspace DIR --evaluation RECEIPT REF` copies the suite. Plain `kmx push REF` remains explicitly unevaluated. Neither form deploys. |
-| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --inference provider:NAME --evidence RECEIPT` deploys without building, repacking, or publishing. `--plan` is GET-only; legacy bundle lift is separate. |
+| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --evidence RECEIPT` plus Orka `--inference provider:NAME` or kagent `--bindings FILE` deploys without building, repacking, or publishing. `--plan` is GET-only; legacy bundle lift is separate. |
 """
 GOOD = """<img src="brand/ketu.svg" alt="Kaimahi ketu mark">
 **Agent Builder CLI for Kubernetes.**
@@ -34,8 +34,8 @@ GOOD = """<img src="brand/ketu.svg" alt="Kaimahi ketu mark">
 [![Release](https://img.shields.io/github/v/release/kaimahi-agents/kaimahi)](https://github.com/kaimahi-agents/kaimahi/releases)
 [![License](https://img.shields.io/github/license/kaimahi-agents/kaimahi)](LICENSE)
 ## Create, Prove, Lift
-Root Lift is not currently qualified against a real cluster.
-""" + JOURNEY + """## Get Your First Answer
+Bounded CI qualifies Orka exact reuse and kagent fresh-target creation; it does not prove every promotion, creation or partial-outcome path.
+""" + JOURNEY + """## Getting Starter: Get Your First Answer
 ```bash
 """ + INSTALL + """```
 ```bash
@@ -50,8 +50,8 @@ kmx quickstart
 | Live Agent | `kmx create --live` creates runtime resources and a PortableAgent bundle. `kmx run --agent NAME --prompt TEXT` performs one Task; `kmx chat NAME` opens an Orka session. |
 | Legacy bundle | Hidden but callable `kmx bundle ...` commands retain PortableAgent operations. They are not AgentSuite commands. |
 ## Runtime Boundaries
-- **Orka** is the default runtime. Its packaged workspace path supports evaluation/evaluated publication and the only root digest Lift; it also owns live create, run, chat and the legacy bundle lifecycle.
-- **kagent** support is exact-version: v0.10.2 live create; v0.10.3 Go packaged workspace authoring, `eval --bindings`, evaluated publication, and legacy bundle lift/status/evaluation. Suite Lift, status, and gates are unavailable.
+- **Orka** is the default runtime. Its packaged workspace path supports evaluation, evaluated publication and root digest Lift with exact evaluated reuse; it also owns live create, run, chat and the legacy bundle lifecycle.
+- **kagent** support is exact-version: v0.10.2 live create; v0.10.3 Go packaged workspace authoring, `eval --bindings`, evaluated publication, create-only root digest Lift, and legacy bundle lift/status/evaluation. Packaged status and retirement are unavailable.
 - **agentsessions** is evaluation and replay integration for the legacy bundle path, not a KMX deployment target.
 ## Safety And Status
 > [!IMPORTANT]
@@ -73,7 +73,7 @@ for label, literal in [
     ("ketu icon", '<img src="brand/ketu.svg" alt="Kaimahi ketu mark">\n'),
     ("product line", "**Agent Builder CLI for Kubernetes.**\n"),
     ("journey heading", "## Create, Prove, Lift\n"),
-    ("first-answer heading", "## Get Your First Answer\n"),
+    ("first-answer heading", "## Getting Starter: Get Your First Answer\n"),
     ("workspace/live heading", "## Workspace And Live Paths\n"),
     ("runtime boundaries heading", "## Runtime Boundaries\n"),
     ("safety/status heading", "## Safety And Status\n"),
@@ -106,17 +106,20 @@ CASES += [
     ("plain push treated as evaluated", GOOD.replace("Plain `kmx push REF` remains explicitly unevaluated. ", ""), "Publish row must keep plain push unevaluated"),
     ("lift builds", GOOD.replace("without building, repacking, or publishing", "after rebuilding and publishing"), "Lift row must stay deploy-only"),
     ("lift plan writes", GOOD.replace("`--plan` is GET-only", "`--plan` applies resources"), "Lift row must preserve the GET-only plan boundary"),
-    ("lift qualification claimed", GOOD.replace("not currently qualified against a real cluster", "qualified against a real cluster"), "root Lift must not claim real-cluster qualification"),
-    ("late release warning", GOOD.replace(WARNING, "").replace("| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --inference provider:NAME --evidence RECEIPT` deploys without building, repacking, or publishing. `--plan` is GET-only; legacy bundle lift is separate. |", "| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --inference provider:NAME --evidence RECEIPT` deploys without building, repacking, or publishing. `--plan` is GET-only; legacy bundle lift is separate. |\n" + WARNING.rstrip()), "release/main warning must precede"),
+    ("lift runtime binding missing", GOOD.replace(" or kagent `--bindings FILE`", ""), "Lift row must preserve runtime-specific bindings"),
+    ("lift qualification missing", GOOD.replace("qualifies Orka exact reuse and kagent fresh-target creation", "has tests"), "Lift qualification scope is missing"),
+    ("lift qualification broadened", GOOD.replace("does not prove every promotion, creation or partial-outcome path", "proves every path"), "Lift qualification limits are missing"),
+    ("late release warning", GOOD.replace(WARNING, "").replace("| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --evidence RECEIPT` plus Orka `--inference provider:NAME` or kagent `--bindings FILE` deploys without building, repacking, or publishing. `--plan` is GET-only; legacy bundle lift is separate. |", "| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --evidence RECEIPT` plus Orka `--inference provider:NAME` or kagent `--bindings FILE` deploys without building, repacking, or publishing. `--plan` is GET-only; legacy bundle lift is separate. |\n" + WARNING.rstrip()), "release/main warning must precede"),
     ("stable table label", GOOD.replace("| Stage | Current development build |", "| Stage | Latest stable release |"), "exact two-column header"),
     ("malformed table separator", GOOD.replace("|---|---|", "|---|"), "separator is missing or malformed"),
     ("extra suite row", GOOD.replace("| **Lift** |", "| **Inspect** | Future status. |\n| **Lift** |"), "exactly four rows"),
     ("extra table column", GOOD.replace("| **Create** | `kmx create NAME --workspace DIR` authors source. |", "| **Create** | `kmx create NAME --workspace DIR` authors source. | extra |"), "exactly two columns"),
     ("generic legacy guide", GOOD.replace("Legacy PortableAgent bundle lifecycle", "Lift operation guide"), "agent-lift links must be labeled"),
-    ("Orka suite support broadened", GOOD.replace("packaged workspace path supports evaluation/evaluated publication and the only root digest Lift", "owns every suite operation"), "Orka default is missing"),
+    ("Orka suite support broadened", GOOD.replace("packaged workspace path supports evaluation, evaluated publication and root digest Lift with exact evaluated reuse", "owns every suite operation"), "Orka default is missing"),
     ("wrong kagent version", GOOD.replace("v0.10.3 Go", "v1.0 Python"), "kagent version boundary is missing"),
     ("kagent suite evaluation removed", GOOD.replace("`eval --bindings`, evaluated publication, and ", ""), "kagent version boundary is missing"),
-    ("kagent suite lift claimed", GOOD.replace("Suite Lift, status, and gates are unavailable.", "Suite Lift is available."), "kagent version boundary is missing"),
+    ("kagent digest lift removed", GOOD.replace("create-only root digest Lift, and ", ""), "kagent version boundary is missing"),
+    ("kagent status claimed", GOOD.replace("Packaged status and retirement are unavailable.", "Packaged status is available."), "kagent version boundary is missing"),
     ("agentsessions deployment claimed", GOOD.replace("not a KMX deployment target", "a KMX deployment target"), "agentsessions boundary is missing"),
     ("wrong tap", GOOD.replace("kaimahi-agents/tap/kmx", "other/tap/kmx"), "Homebrew install is missing"),
     ("moving Go source", GOOD.replace("cmd/kmx@v0.5.1", "cmd/kmx@main"), "pinned Go install is missing"),

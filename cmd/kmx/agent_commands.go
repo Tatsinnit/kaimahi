@@ -83,8 +83,8 @@ directory. Scripts must pass --workspace <directory> to initialize explicitly.
 No cluster settings are loaded, no image is built and no Agent is deployed.
 Root eval can prove an exact packaged Orka workspace with --inference or exact
 kagent v0.10.3 Go workspace with --bindings on a prepared target. Root lift
-consumes an exact packaged Orka digest and matching private evidence rather than
-workspace source; kagent suite lift remains unavailable.
+consumes either exact packaged runtime and matching private evidence rather than
+workspace source; kagent lift is create-only and refuses occupied targets.
 
 Use --live for direct Orka or kagent resources, including bundle/YAML previews.
 It bypasses workspace discovery and conflicts with --workspace. All live-only

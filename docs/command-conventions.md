@@ -51,7 +51,7 @@ Use one verb per meaning. Do not add a synonym for an existing verb.
 | `eval` | Place and evaluate the full packaged native workspace inventory. | Orka: `kmx eval --to-context <ctx> --inference provider:NAME --out <private.json>`; kagent: replace `--inference` with `--bindings FILE` |
 | `evaluate` | Run legacy bundle evaluation cases against a deployed revision. | `kmx bundle evaluate <bundle-dir>` |
 | `validate` | Check an artifact offline, without a cluster. | `kmx suite validate <path>` |
-| `lift` | Deploy an exact suite digest using explicit native evidence; bundle lift remains separate. | `kmx lift <ref>@<digest> --to-context <ctx> --inference provider:NAME --evidence FILE` |
+| `lift` | Deploy an exact suite digest using explicit native evidence; bundle lift remains separate. | `kmx lift <ref>@<digest> --to-context <ctx> --evidence FILE` plus Orka `--inference` or kagent `--bindings` |
 | `retire` | Remove the workload resources a bundle owns. | `kmx bundle retire <bundle-dir>` |
 | `result` | Retrieve the outcome of an existing execution. | `kmx task result <task>` |
 

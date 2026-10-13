@@ -155,8 +155,9 @@ exact manifest S before publication; ordinary push is unevaluated. Receipts are
 unsigned observations, not policy gates. Dedicated shards qualify bounded Orka
 and kagent two-case workspace scenarios; this is not general runtime support.
 Root `lift REF@sha256:DIGEST` consumes that explicit private full-pass evidence
-for source-free, deploy-only native Orka placement; root Lift is not currently
-qualified against a real cluster. See [suite workspace](suite-workspace.md).
+for source-free, deploy-only packaged Orka or exact-kagent placement. Bounded
+qualification covers Orka exact reuse and kagent fresh-target creation, not every
+promotion, creation or partial-outcome path. See [suite workspace](suite-workspace.md).
 
 ## Vocabulary
 

@@ -39,7 +39,7 @@ func TestTargetsCapabilitiesMatchLifecycleDeclarations(t *testing.T) {
 
 func TestTargetsKagentEvaluationRemainsVersionScoped(t *testing.T) {
 	kagent := compiledTargets()[1]
-	if len(kagent.QualifiedVersions) != 2 || !strings.Contains(kagent.QualifiedVersions[1].Scope, "packaged workspace eval/evaluated push") {
+	if len(kagent.QualifiedVersions) != 2 || !strings.Contains(kagent.QualifiedVersions[1].Scope, "packaged workspace eval/evaluated push/digest lift") {
 		t.Fatalf("missing packaged workspace qualification: %+v", kagent.QualifiedVersions)
 	}
 	for _, capability := range kagent.Capabilities {

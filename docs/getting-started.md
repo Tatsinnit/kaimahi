@@ -51,7 +51,7 @@ custom authoring and a first answer, use the wizard described below.
 kmx does not install or upgrade kagent. Explicit exact-v0.10.2 create and
 exact-v0.10.3 declarative legacy bundle lift/status/evaluation require an operator-prepared
 installation. The same exact-v0.10.3 Go runtime supports packaged workspace
-`eval --bindings FILE` and evaluated push; see [version-qualified
+`eval --bindings FILE`, evaluated push and create-only root digest Lift; see [version-qualified
 placement](agent-lift.md#exact-v0103-declarative-bundle-placement).
 
 Choose a local cluster name you own and pin its context:
@@ -177,8 +177,9 @@ Packaged workspace evaluation is implemented for native Orka with `--inference`
 and exact-v0.10.3 Go kagent with `--bindings`; matching full-passing evidence can
 authorize evaluated push. Standalone package evaluation remains unavailable; root
 `kmx lift REF@sha256:DIGEST` instead deploys an exact registry or local-layout
-native Orka package using a separate matching private evidence file, explicit
-target, and Ready `openai` inference Provider.
+native package using a separate matching private evidence file and explicit
+target. Orka uses a Ready `openai` inference Provider; kagent uses author-owned
+bindings and refuses any occupied target.
 
 ### Live resources and bundles
 

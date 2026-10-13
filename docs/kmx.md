@@ -15,8 +15,9 @@ exact v0.10.2; explicit declarative bundle lift/status and receipt-bound Go
 bundle evaluation target preinstalled exact v0.10.3. The packaged exact-v0.10.3
 Go workspace profile also supports root `eval --bindings`, evaluated push and
 same-runtime receipt comparison. Evaluation is unsecure-only; trusted-proxy is
-refused. Python execution, suite lift/status/gates and standalone chat/run remain
-unsupported. [Version-qualified placement](agent-lift.md#exact-v0103-declarative-bundle-placement)
+refused. Python execution and standalone chat/run remain unsupported. Packaged
+exact-v0.10.3 Go root digest Lift is supported separately;
+packaged status/retirement remain unavailable. [Version-qualified placement](agent-lift.md#exact-v0103-declarative-bundle-placement)
 does not adopt or update resources. Historical AKS lift records remain
 readable for teardown only.
 Plane administration, model overlays, migration, governance and preset
@@ -103,8 +104,10 @@ are unreleased.
 Root `eval` evaluates a full packaged native Orka/kagent workspace and retains offline `diff` and
 `from-sessions` helpers. Standalone packaged evaluation remains unimplemented.
 Root `lift <ref>@<digest>` deploys an evaluated native suite from a registry or
-`--from-layout`, with explicit `--to-context`, `--inference provider:NAME` and
-private `--evidence FILE`. `--plan` is GET-only; `--promote` explicitly selects
+`--from-layout`, with explicit `--to-context` and private `--evidence FILE`.
+Orka requires `--inference provider:NAME`; packaged kagent instead requires
+author-owned `--bindings FILE`. Kagent is create-only and refuses occupied targets,
+even when evaluation UIDs match; evidence never crosses runtimes. `--plan` is GET-only; `--promote` explicitly selects
 source-only evidence for an eligible different destination. No model/runtime
 override, build, repack, publish, update or adoption. Reports support `-o json`.
 See [digest lift](suite-workspace.md#digest-lift) for gates and partial outcomes. See the

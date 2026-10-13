@@ -34,12 +34,14 @@ reuses a complete matching UID-bound deployment; it does not adopt or update.
 Evaluation requires a complete matching saved placement, desired bindings and
 explicit `--to-context`; unsecure only, trusted-proxy refused before any send.
 Packaged exact-v0.10.3 Go workspaces separately use root `eval --bindings FILE`,
-export runtime-specific full-passing evidence and support evaluated push; suite
-lift/status/gates remain unavailable.
+export runtime-specific full-passing evidence, support evaluated push and feed
+create-only root digest Lift. Any occupied primary/generated child refuses;
+packaged status and retirement remain unavailable.
 Deployment receipts prove readiness, not execution success. Dedicated CI now
 continuously qualifies Go v0.10.3 plan/lift/repeat/status/conflicts, receipt-bound
 evaluation, packaged two-case workspace evaluation/evaluated push and a separate
-one-shot native A2A answer using a keyless model/MCP fixture. Python remains
+source-free digest Lift scenario, plus a one-shot native A2A answer using a
+keyless model/MCP fixture. Python remains
 render-only; promotion gates are unsupported. Do not
 infer or add an installer, upgrade path, auto-detection, standalone chat/run,
 list/show, retirement, console, quickstart, `up`, or AKS payload from those
@@ -117,7 +119,7 @@ AgentSuite format package (`agentsuite`), and the application interface
 (`pkg/kmx`). AgentSuite does not have a separate module or version pin; root
 `go test ./...` tests it alongside the CLI, including first-class Orka paths
 and bounded kagent v0.10.2 create/v0.10.3 Go bundle lift/status/evaluate plus
-packaged workspace evaluation/evaluated push.
+packaged workspace evaluation/evaluated push and create-only digest Lift.
 Plane commands, administration, the source module (including checked-in SQL),
 build helper, embedded assets and plane-only scripts/fixtures are removed.
 Historical source remains in Git history. This cleanup deletes no deployed
@@ -147,7 +149,9 @@ metadata, enforces specific exit-1 refusals and checks receipt-bound status.
 Native A2A execution is independently verified with exactly one MCP tool call,
 two model calls and one terminal answer, with no resend. A separate packaged
 workspace phase runs two tool-free cases, self-diff and evaluated push with
-occupied/stale-evidence refusals. Only payload-free `qualification.json` and
+stale-evidence refusal, then source-free digest Lift into a fresh namespace with
+GET-only planning, ordered creation and occupied repeat refusal without another
+native execution. Only payload-free `qualification.json` and
 `suite-qualification.json` survive under `${RUNNER_TEMP:-/tmp}/kmx-kagent-lift/`;
 raw logs, manifests, credentials, prompts and answers are not artifacts.
 Qualifier diagnostics expose only whitelisted subphase and reason codes through
@@ -163,11 +167,14 @@ shard's exclusive cluster-creation flag and a matching `KIND_CLUSTER`, refuses
 existing work/model fixtures, and uses a fresh private KMX home. It adds the pinned
 CPU AIKit model inside that owned cluster, warms it, then attempts one native
 full-workspace evaluation without retry. Independent live identities/specs,
-result hashes, exact local-layout transfer and refusal audits gate its metadata
-artifacts. Only `artifacts/passing.json` and scalar `artifacts/qualification.json`
-are uploaded on success; raw captures are private. Existing cluster deletion owns
-all runtime/model cleanup. A successful run qualifies this fixed two-case
-native workspace scenario. Harness tests alone are not evidence of real execution.
+result hashes, exact registry/local-layout transfer, source-withheld root CLI
+exact reuse, separate fresh answer Tasks and no-effect refusal audits gate its
+metadata artifacts. Only `artifacts/passing.json` and scalar
+`artifacts/qualification.json` are uploaded on success; raw captures are private.
+Existing cluster deletion owns all runtime/model cleanup. A successful run
+qualifies this fixed two-case native workspace and exact-reuse Lift scenario. It
+does not qualify promotion, absent-resource CLI creation or partial outcomes.
+Harness tests alone are not evidence of real execution.
 
 ## Comments
 

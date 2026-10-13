@@ -15,7 +15,7 @@ This is the legacy PortableAgent lifecycle, not packaged-suite lift. Root
 workspace `eval` is a separate packaged Orka/kagent workflow, and standalone
 packaged-reference evaluation is not implemented. Root
 `kmx lift REF@sha256:DIGEST` is implemented separately for evaluated one-member
-native Orka packages; see
+native Orka and exact-v0.10.3 Go kagent packages; see
 [digest Lift](suite-workspace.md#digest-lift).
 
 ```console

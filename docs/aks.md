@@ -57,7 +57,9 @@ creating or resuming one.
 
 The former root `lift` AKS-provisioning alias and `lift down` are removed
 outright. Use `kmx aks up` and `kmx aks down`; root
-`kmx lift REF@sha256:DIGEST` now means one-member native Orka package deployment.
+`kmx lift REF@sha256:DIGEST` now means one-member packaged native deployment:
+Orka or exact-v0.10.3 Go kagent. Runtime-specific selectors come from the package
+contract.
 Existing run records and historical ownership teardown remain unchanged.
 
 **This is a fresh-install path, not a version upgrade.** An existing v0.1.3

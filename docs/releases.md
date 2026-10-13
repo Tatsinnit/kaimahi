@@ -196,8 +196,8 @@ retained them as callable compatibility routes with notices on stderr. Current
 development builds remove root `ctx`, `up`, `down`, the former AKS-provisioning
 meaning of `lift`, and `lift down` outright, without retirement stubs. Replace
 them with `context show/use`, `local up/down` and `aks up/down` respectively.
-Root `lift <ref>@<digest>` is now a separate one-member native Orka package
-deployment command.
+Root `lift <ref>@<digest>` is now a separate one-member packaged native Orka or
+exact-v0.10.3 Go kagent deployment command.
 Current development builds also remove the entire `kmx agent` group, without
 aliases or stubs: use root `create/chat/run`, `orka show/list`, legacy
 `bundle evaluate/lift/retire/verify/status` and root `eval diff/from-sessions`
@@ -211,9 +211,10 @@ kagent, and stops later cases after the first non-pass. Root `push
 [--workspace DIR] REF` publishes the exact prepared OCI graph; `push
 --evaluation FILE` requires matching runtime-specific full-passing evidence for
 that exact manifest.
-Root `lift REF@sha256:DIGEST` deploys that native Orka package from a registry or
-local layout with explicit private full-passing evidence, target and Ready
-`openai` inference Provider; `--plan` is GET-only. Standalone package-reference evaluation
+Root `lift REF@sha256:DIGEST` deploys the matching packaged runtime from a
+registry or local layout with explicit private full-passing evidence and target.
+Orka uses a Ready `openai` inference Provider; kagent uses `--bindings`, creates
+new resources only and refuses occupied targets. `--plan` is GET-only. Standalone package-reference evaluation
 remains unavailable. Create, eval and push share nearest-ancestor discovery; explicit
 `--workspace DIR` selects an exact root without fallback and create initializes
 it without prompting. Terminal initialization asks `Start one here? [Y/n]`;

@@ -121,7 +121,7 @@ kmx push [--evaluation RECEIPT] REF
   -> optional unsigned provenance on registry publication
 
 kmx lift REF@sha256:DIGEST --to-context CTX \
-  --inference provider:NAME --evidence RECEIPT
+  --evidence RECEIPT (--inference provider:NAME | --bindings FILE)
   -> source-free bounded retrieval of that exact OCI graph
   -> evidence and packaged identity revalidation
   -> GET-only plan or guarded create/exact reuse on an explicit target
@@ -134,7 +134,8 @@ binds supplemental native metadata and cases. Push never deploys.
 Native Orka workspace evaluation continuously qualifies one fixed two-case
 scenario. Exact-v0.10.3 Go kagent workspace evaluation, runtime-specific passing
 evidence, evaluated publication and same-runtime receipt comparison are also
-implemented and qualified. Kagent suite lift, status and gates are not.
+implemented and qualified. Root digest Lift supports both packaged profiles;
+kagent packaged status and retirement are not implemented.
 
 ### Native digest Lift
 
@@ -146,14 +147,18 @@ without a mutation guard, admission, writes, Tasks or placement records.
 
 Apply revalidates the artifact, evidence, prerequisites and owned-resource proof,
 then guards the target, preflights both absent creates and consumes the plan once.
-It only creates absent resources or exactly reuses receipt-bound resources; it
-never updates, adopts, retries ambiguous writes, rolls back or cleans up. Partial
-outcomes retain acknowledged identities. `--promote` explicitly permits an
-eligible destination where both suite-owned resources are absent, with the same
-exact packaged identity and pinned runtime profile plus a Ready `openai` Provider
-declaring that packaged model; its evidence proves the source only.
+Orka creates absent resources or exactly reuses receipt-bound resources; kagent
+creates absent ModelConfig/Agent resources only and refuses any occupied primary
+or generated child. Neither path updates, adopts, retries ambiguous writes, rolls
+back or cleans up. Partial outcomes retain acknowledged identities. `--promote`
+explicitly permits an eligible different destination with the same exact packaged
+identity and pinned runtime profile; Orka requires a Ready `openai` Provider,
+while kagent retains the packaged model declaration and exact runtime inventories.
+Evidence proves the source only.
 Created resources need fresh evaluation before later receipt-bound reuse.
-Root Lift is not currently qualified against a real cluster.
+Bounded CI qualifies Orka exact registry/local-layout reuse and kagent
+fresh-target creation/occupied refusal. Orka promotion, absent creation and
+partial CLI outcomes are not established by its fixed reuse scenario.
 
 ### Legacy PortableAgent path
 
@@ -194,8 +199,9 @@ Required live shards prove bounded scenarios rather than universal support:
 - Orka runtime, Kubernetes Tool and the fixed native workspace qualifier;
 - stock Orka Helm integration;
 - clusterless agentsessions evaluation/replay and judge-client proof;
-- exact kagent v0.10.3 Go bundle lift/status/evaluation, native A2A, and packaged
-  two-case workspace evaluation/evaluated publication.
+- exact kagent v0.10.3 Go bundle lift/status/evaluation, native A2A, packaged
+  two-case workspace evaluation/evaluated publication, and source-free digest
+  Lift into a fresh target with occupied-repeat refusal.
 
 The `e2e-hello-world` job aggregates those shards. A green shard qualifies its
 fixed versions and scenario; it is not a production-readiness claim.

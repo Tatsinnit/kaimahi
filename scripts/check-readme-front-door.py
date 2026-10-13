@@ -10,7 +10,7 @@ ORDER = [
     ("ketu icon", r'src="brand/ketu\.svg"'),
     ("product line", r"^\*\*Agent Builder CLI for Kubernetes\.\*\*$"),
     ("journey heading", r"^## Create, Prove, Lift$"),
-    ("first-answer heading", r"^## Get Your First Answer$"),
+    ("first-answer heading", r"^## Getting Starter: Get Your First Answer$"),
     ("workspace/live heading", r"^## Workspace And Live Paths$"),
     ("runtime boundaries heading", r"^## Runtime Boundaries$"),
     ("safety/status heading", r"^## Safety And Status$"),
@@ -37,7 +37,7 @@ JOURNEY_ROWS = [
     ("Create", r"`kmx create NAME\b"),
     ("Prove", r"`kmx eval --workspace DIR\b"),
     ("Publish", r"`kmx push --workspace DIR --evaluation RECEIPT REF`"),
-    ("Lift", r"`kmx lift REF@sha256:DIGEST --to-context CTX --inference provider:NAME --evidence RECEIPT`"),
+    ("Lift", r"`kmx lift REF@sha256:DIGEST --to-context CTX --evidence RECEIPT`"),
 ]
 FENCE = re.compile(r"^```[^\n]*\n(.*?)^```", re.M | re.S)
 NEXT_SECTION = re.compile(r"^## ", re.M)
@@ -152,8 +152,12 @@ def check(text: str) -> str | None:
         return "README front door: Lift row must stay deploy-only"
     if "`--plan` is GET-only" not in rows[3][1]:
         return "README front door: Lift row must preserve the GET-only plan boundary"
-    if "not currently qualified against a real cluster" not in journey:
-        return "README front door: root Lift must not claim real-cluster qualification"
+    if "Orka `--inference provider:NAME` or kagent `--bindings FILE`" not in rows[3][1]:
+        return "README front door: Lift row must preserve runtime-specific bindings"
+    if "qualifies Orka exact reuse and kagent fresh-target creation" not in journey:
+        return "README front door: Lift qualification scope is missing"
+    if "does not prove every promotion, creation or partial-outcome path" not in journey:
+        return "README front door: Lift qualification limits are missing"
 
     answer = section_after(text, matches["first-answer heading"])
     blocks = list(FENCE.finditer(answer))
@@ -180,8 +184,8 @@ def check(text: str) -> str | None:
 
     runtime = section_after(text, matches["runtime boundaries heading"])
     for label, pattern in [
-        ("Orka default", r"\*\*Orka\*\* is the default runtime\..*packaged workspace path supports\s+evaluation/evaluated publication and the only root digest Lift;.*live\s+create, run, chat.*legacy bundle lifecycle"),
-        ("kagent version boundary", r"\*\*kagent\*\* support is exact-version.*v0\.10\.2 live\s+create; v0\.10\.3 Go packaged workspace authoring, `eval --bindings`, evaluated\s+publication, and legacy bundle lift/status/evaluation\. Suite Lift, status, and\s+gates are unavailable\."),
+        ("Orka default", r"\*\*Orka\*\* is the default runtime\..*packaged workspace path supports\s+evaluation, evaluated publication and root digest Lift with exact evaluated\s+reuse;.*live create, run, chat.*legacy bundle lifecycle"),
+        ("kagent version boundary", r"\*\*kagent\*\* support is exact-version.*v0\.10\.2 live\s+create; v0\.10\.3 Go packaged workspace authoring, `eval --bindings`, evaluated\s+publication, create-only root digest Lift, and legacy bundle\s+lift/status/evaluation\. Packaged status and retirement are unavailable\."),
         ("agentsessions boundary", r"\*\*agentsessions\*\* is evaluation and replay integration for the legacy bundle\s+path, not a KMX deployment target\."),
     ]:
         if re.search(pattern, runtime, re.S) is None:

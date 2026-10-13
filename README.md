@@ -26,8 +26,9 @@ enforcement.
 ## Create, Prove, Lift
 
 **Create → Prove → Lift** is implemented on current `main` for one-member native
-Orka suites. The commands remain unreleased; root Lift has hermetic command/apply
-coverage but is not currently qualified against a real cluster.
+Orka and exact-v0.10.3 Go kagent suites. The commands remain unreleased. Bounded
+CI qualifies Orka exact reuse and kagent fresh-target creation; it does not prove
+every promotion, creation or partial-outcome path.
 
 > [!NOTE]
 > The table below describes the current development build, which is unreleased.
@@ -40,14 +41,14 @@ coverage but is not currently qualified against a real cluster.
 | **Create** | `kmx create NAME --workspace DIR --model MODEL --instructions FILE` authors one tool-free workspace member offline. It does not contact Kubernetes, build an image, or run a model. |
 | **Prove** | `kmx eval --workspace DIR --to-context CTX --inference provider:NAME --out RECEIPT` runs ordered native Orka cases once, stops later cases after the first non-pass, and writes private evidence only when all cases pass. |
 | **Publish** | `kmx push --workspace DIR --evaluation RECEIPT REF` checks that evidence against the exact OCI manifest and publishes that graph. Plain `kmx push REF` remains explicitly unevaluated. Neither form deploys. |
-| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --inference provider:NAME --evidence RECEIPT` deploys the exact native Orka package without building, repacking, or publishing. `--plan` is GET-only; hidden `kmx bundle lift` remains the separate legacy PortableAgent operation. |
+| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --evidence RECEIPT` plus Orka `--inference provider:NAME` or kagent `--bindings FILE` deploys the matching packaged runtime without building, repacking, or publishing. `--plan` is GET-only; kagent refuses occupied targets; hidden `kmx bundle lift` remains the separate legacy PortableAgent operation. |
 
 Create and push discover the nearest ancestor `workspace.yaml`; `--workspace DIR`
 selects an exact root without fallback. Read the [workspace lifecycle](docs/suite-workspace.md)
 for identities, evidence privacy, exact evaluated-subject reuse, absent-only
 source-evidence `--promote`, partial outcomes, and fresh-evaluation requirements.
 
-## Get Your First Answer
+## Getting Starter: Get Your First Answer
 
 Install Docker or Podman (`CONTAINER_ENGINE=podman` selects Podman), then choose
 one independent install route for the latest stable release. Go installs require
@@ -86,12 +87,12 @@ context selection.
 ## Runtime Boundaries
 
 - **Orka** is the default runtime. Its packaged workspace path supports
-  evaluation/evaluated publication and the only root digest Lift; it also owns
-  live create, run, chat and the legacy bundle lifecycle.
+  evaluation, evaluated publication and root digest Lift with exact evaluated
+  reuse; it also owns live create, run, chat and the legacy bundle lifecycle.
 - **kagent** support is exact-version and operation-specific: v0.10.2 live
   create; v0.10.3 Go packaged workspace authoring, `eval --bindings`, evaluated
-  publication, and legacy bundle lift/status/evaluation. Suite Lift, status, and
-  gates are unavailable.
+  publication, create-only root digest Lift, and legacy bundle
+  lift/status/evaluation. Packaged status and retirement are unavailable.
 - **agentsessions** is evaluation and replay integration for the legacy bundle
   path, not a KMX deployment target.
 
