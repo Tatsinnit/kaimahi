@@ -65,11 +65,11 @@ one-member packaged native Orka/exact-v0.10.3 Go kagent operation.
 
 ```text
 Workspace --create/eval--> AgentSuite artifact --push--> OCI location
-     |                                               |
-     |                                               +-> exact-digest native lift
-     |
-     +-> create --live -----------> PortableAgent bundle
-                                      -> hidden bundle lifecycle
+                                                    |
+                                                    +-> exact-digest native lift
+
+create --live -----------> Runtime resources + PortableAgent bundle
+                                               -> hidden bundle lifecycle
 ```
 
 | Command | Primary object | Current effect |
