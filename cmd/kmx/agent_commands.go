@@ -61,6 +61,7 @@ resolves against.`,
 	return cmd
 }
 
+// newAgentCreateCommand owns the offline workspace/live-resource mode split.
 func newAgentCreateCommand(state *commandState) *cobra.Command {
 	var opt app.CreateOptions
 	var workspaceRoot, workspaceVersion string

@@ -63,11 +63,13 @@ def ordered_in(block: str, commands: list[tuple[str, str]]) -> str | None:
 
 
 def section_after(text: str, heading_match: re.Match[str]) -> str:
+    """Return the Markdown section following a matched level-two heading."""
     end = NEXT_SECTION.search(text, heading_match.end())
     return text[heading_match.end():end.start() if end else len(text)]
 
 
 def journey_rows(section: str) -> tuple[list[tuple[str, str]], str | None]:
+    """Parse the exact four-row, two-column suite journey table."""
     lines = section.splitlines()
     try:
         start = lines.index(JOURNEY_HEADER)
@@ -163,6 +165,7 @@ def check(text: str) -> str | None:
 
 
 def main(path: Path) -> int:
+    """Check one README path and return a process exit status."""
     problem = check(path.read_text())
     if problem:
         print(problem, file=sys.stderr)
