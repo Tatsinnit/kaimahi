@@ -23,6 +23,10 @@ Kaimahi's `kmx` CLI helps developers author and prove agents for Kubernetes. A
 content-addressed OCI artifact. The selected runtime owns execution and
 enforcement.
 
+A workspace does not rename or replace AgentSuite. It is the mutable authoring
+tree that KMX resolves into the portable AgentSuite artifact used for publication
+and Lift.
+
 ## Create, Prove, Lift
 
 **Create → Prove → Lift** is implemented on current `main` for one-member native

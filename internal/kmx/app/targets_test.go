@@ -39,11 +39,8 @@ func TestTargetsCapabilitiesMatchLifecycleDeclarations(t *testing.T) {
 
 func TestTargetsKagentEvaluationRemainsVersionScoped(t *testing.T) {
 	kagent := compiledTargets()[1]
-	if len(kagent.QualifiedVersions) != 2 || !strings.Contains(kagent.QualifiedVersions[1].Scope, "packaged workspace eval/evaluated push/digest lift") {
-		t.Fatalf("missing packaged workspace qualification: %+v", kagent.QualifiedVersions)
-	}
 	for _, capability := range kagent.Capabilities {
-		if capability.Operation == "evaluate" && (!capability.Supported || !strings.Contains(capability.Reason, "unsecure") || !strings.Contains(capability.Reason, "packaged workspace") || !strings.Contains(capability.Reason, "tool/judge assertions refuse offline")) {
+		if capability.Operation == "evaluate" && (!capability.Supported || !strings.Contains(capability.Reason, "unsecure")) {
 			t.Fatalf("missing scoped evaluation: %+v", capability)
 		}
 		if (capability.Operation == "chat" || capability.Operation == "run" || capability.Operation == "verify") && capability.Supported {

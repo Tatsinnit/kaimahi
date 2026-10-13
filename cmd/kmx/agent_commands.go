@@ -61,7 +61,6 @@ resolves against.`,
 	return cmd
 }
 
-// newAgentCreateCommand owns the offline workspace/live-resource mode split.
 func newAgentCreateCommand(state *commandState) *cobra.Command {
 	var opt app.CreateOptions
 	var workspaceRoot, workspaceVersion string
@@ -73,7 +72,7 @@ func newAgentCreateCommand(state *commandState) *cobra.Command {
 		Long: `Create one native workspace member offline by default.
 Orka is the default runtime; --runtime kagent authors exact v0.10.3 Go
 private metadata. --runtime-version may explicitly select only v0.10.3.
-Authoring itself performs no placement or evaluation.
+This does not enable suite kagent placement or evaluation.
 
 A name, exact --model and file-valued --instructions are required; --description
 is optional. Discover the nearest ancestor workspace.yaml. An existing workspace
@@ -81,10 +80,7 @@ has a one-member limit: use a new --workspace directory for another member.
 Without a workspace, a visible terminal can confirm initialization in the current
 directory. Scripts must pass --workspace <directory> to initialize explicitly.
 No cluster settings are loaded, no image is built and no Agent is deployed.
-Root eval can prove an exact packaged Orka workspace with --inference or exact
-kagent v0.10.3 Go workspace with --bindings on a prepared target. Root lift
-consumes either exact packaged runtime and matching private evidence rather than
-workspace source; kagent lift is create-only and refuses occupied targets.
+Workspace evaluation and release lift are not yet available.
 
 Use --live for direct Orka or kagent resources, including bundle/YAML previews.
 It bypasses workspace discovery and conflicts with --workspace. All live-only

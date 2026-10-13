@@ -82,10 +82,10 @@ func compiledTargets() []TargetInfo {
 		{ID: string(kagent.ID()), DisplayName: "Kagent", Kind: "adapter", SupportTier: "version-scoped",
 			QualifiedVersions: []TargetQualification{
 				{Version: scaffold.KagentVersion, Scope: "explicit create only", Evidence: "exact controller commit and OCI image checks; e2e-kagent-create"},
-				{Version: "v0.10.3", Scope: "explicit Go-only bundle lift/status/evaluate and packaged workspace eval/evaluated push/digest lift; Go/Python bundle render", Evidence: "compiled exact pins; e2e-kagent-lift qualifies Go bundle lifecycle, native MCP/product evaluation, packaged two-case workspace evaluation/evaluated push and source-free digest lift into a fresh target with occupied-repeat refusal; deployment readiness is not execution proof"},
+				{Version: "v0.10.3", Scope: "explicit Go-only new placement, receipt-bound lift/status/evaluate; Go/Python render", Evidence: "compiled exact pins; e2e-kagent-lift qualifies Go placement/status/conflicts, native MCP and product evaluation with fresh A2A IDs, exact answer digests and repeat offline diff; deployment readiness is not execution proof"},
 			},
 			Capabilities: lifecycleTargetCapabilities(kagent),
-			Detection:    TargetDetection{State: "not-probed", Scope: "explicit version-qualified commands only", Detail: "no Kagent discovery; create validates v0.10.2, explicit Go bundle lifecycle and packaged workspace eval/digest lift validate v0.10.3"}},
+			Detection:    TargetDetection{State: "not-probed", Scope: "explicit version-qualified commands only", Detail: "no Kagent discovery; create validates v0.10.2, explicit Go bundle lift/status/evaluate validate v0.10.3"}},
 		{ID: "agentsessions", DisplayName: "agentsessions", Kind: "integration", SupportTier: "eval-only",
 			QualifiedVersions: []TargetQualification{{Version: agentsessions.ReferenceRevision, Scope: "reference-chat evaluation and local replay only; not the remote host version", Evidence: "pinned Go module; e2e-eval-loop"}},
 			Detection:         TargetDetection{State: "not-probed", Scope: "Sessions API only", Detail: "use --sessions host:port; HarnessRegistry is not probed or qualified"}},
@@ -114,11 +114,11 @@ func lifecycleTargetCapabilities(adapter agentruntime.LifecycleAdapter) []Target
 		if !supported {
 			reason = (&agentruntime.UnsupportedVerbError{Runtime: adapter.ID(), Verb: operation}).Error() + "; use only the supported commands listed here"
 		} else if adapter.ID() == agentruntime.Kagent {
-			reason = "explicit exact-v0.10.2 create or exact-v0.10.3 Go-only bundle lifecycle plus packaged workspace evaluation/digest lift; packaged lift is create-only and refuses occupied targets; no installation, adoption, update or rollback"
+			reason = "explicit exact-v0.10.2 create or exact-v0.10.3 Go-only bundle lift/status/evaluate; no installation, reconciliation, adoption, update or rollback"
 			if operation == "status" {
 				reason = "explicit exact-v0.10.3 Go-only bundle status with desired bindings; receipt-bound readiness, never execution success"
 			} else if operation == "evaluate" {
-				reason = "explicit exact-v0.10.3 Go-only bundle or packaged workspace evaluation with desired bindings; unsecure only, trusted-proxy refused; fresh A2A Tasks and no retries; bundle tool assertions remain unknown, packaged workspace tool/judge assertions refuse offline"
+				reason = "explicit exact-v0.10.3 Go-only receipt-bound evaluation with desired bindings; unsecure only, trusted-proxy refused; fresh A2A Tasks, no retries or promotion gates; tool assertions unknown"
 			}
 		} else if operation == "retire" {
 			reason = "native Orka workload delete/release; not retained-registration retirement; no target teardown"
