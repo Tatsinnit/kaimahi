@@ -7,10 +7,10 @@ import (
 	"reflect"
 	"slices"
 	"strings"
+	"sync/atomic"
 
 	spec "github.com/kaimahi-agents/kaimahi/agentsuite"
 	suiteoras "github.com/kaimahi-agents/kaimahi/internal/kmx/agentsuite/oras"
-	"github.com/kaimahi-agents/kaimahi/internal/kmx/agentsuite/workspace"
 	"github.com/kaimahi-agents/kaimahi/internal/kmx/config"
 	"github.com/kaimahi-agents/kaimahi/internal/kmx/scaffold"
 	godigest "github.com/opencontainers/go-digest"
@@ -22,7 +22,7 @@ var ErrReleaseLift = errors.New("release lift planning refused; no native admiss
 // FromLayout uses the digest in Reference; otherwise Reference is a registry ref.
 type ReleaseLiftOptions struct {
 	Reference, FromLayout, ToContext, ToNamespace, Inference, Evidence string
-	PlainHTTP                                                          bool
+	PlainHTTP, Promote                                                 bool
 }
 
 type ReleaseLiftTarget struct {
@@ -50,6 +50,9 @@ type ReleaseLiftSummary struct {
 	Model          string                `json:"model"`
 	Runtime        string                `json:"runtime"`
 	Target         ReleaseLiftTarget     `json:"target"`
+	SourceTarget   ReleaseLiftTarget     `json:"sourceTarget"`
+	Promote        bool                  `json:"promote"`
+	ServingModel   string                `json:"servingModel,omitempty"`
 	Inference      string                `json:"inference"`
 	BindingDigest  string                `json:"bindingDigest"`
 	RenderedDigest string                `json:"renderedDigest"`
@@ -68,6 +71,7 @@ type PreparedReleaseLift struct {
 	native   *suiteNativePrepared
 	receipt  *suitePassingReceipt
 	summary  ReleaseLiftSummary
+	started  atomic.Bool
 }
 
 func (p *PreparedReleaseLift) Summary() ReleaseLiftSummary {
@@ -100,35 +104,15 @@ func (a *App) PrepareReleaseLift(ctx context.Context, opt ReleaseLiftOptions) (p
 	if opt.ToNamespace == "" {
 		opt.ToNamespace = OrkaNamespace
 	}
-	ref, digest, pinned := strings.Cut(opt.Reference, "@")
-	provider := strings.TrimPrefix(opt.Inference, "provider:")
-	if a == nil || a.Cfg == nil || a.Run == nil || !pinned || ref == "" || !spec.IsValidDigest(digest) ||
-		!verificationIdentity(opt.ToContext) || scaffold.RefuseKeyShapes(opt.ToContext) != nil ||
-		!strings.HasPrefix(opt.Inference, "provider:") || scaffold.ValidateObjectName(provider) != nil ||
-		scaffold.ValidateNamespace(opt.ToNamespace) != nil || opt.Evidence == "" || opt.FromLayout != "" && opt.PlainHTTP {
+	if a == nil || a.Cfg == nil || a.Run == nil || ValidateReleaseLiftOptions(opt) != nil {
 		return nil, ErrReleaseLift
 	}
-	receipt, err := readSuitePassingReceipt(ctx, opt.Evidence)
+	provider := strings.TrimPrefix(opt.Inference, "provider:")
+	inputs, err := readReleaseLiftInputs(ctx, opt)
 	if err != nil {
 		return nil, err
 	}
-	var artifact *suiteoras.Artifact
-	if opt.FromLayout != "" {
-		artifact, err = suiteoras.ReadArtifactLayout(ctx, opt.FromLayout, digest)
-	} else {
-		artifact, err = suiteoras.ReadArtifactRegistry(ctx, opt.Reference, opt.PlainHTTP)
-	}
-	if err != nil {
-		return nil, err
-	}
-	suite, err := workspace.LoadArtifact(ctx, artifact)
-	if err != nil {
-		return nil, err
-	}
-	evidence, err := canonicalSuitePassingReceipt(ctx, receipt, suite)
-	if err != nil {
-		return nil, err
-	}
+	artifact, suite, receipt, evidence := inputs.artifact, inputs.suite, inputs.receipt, inputs.evidence
 	worker := *a.withRunContext(ctx)
 	cfg := *a.Cfg
 	cfg.KubeContext, cfg.ContextSource = opt.ToContext, config.SourceFlag
@@ -137,12 +121,17 @@ func (a *App) PrepareReleaseLift(ctx context.Context, opt ReleaseLiftOptions) (p
 	if err != nil {
 		return nil, err
 	}
-	if !reflect.DeepEqual(receipt.Subject, native.Subject) {
-		return nil, ErrReleaseLift
+	gate, servingModel, err := worker.releaseLiftGate(ctx, receipt.Subject, native.Subject, opt.Promote)
+	if err != nil {
+		return nil, err
 	}
-	s := ReleaseLiftSummary{Suite: suite.Name, SuiteDigest: suite.Digest, Member: suite.MemberID, Model: suite.Model, Runtime: "orka", Target: releaseLiftTarget(native.Subject.Target), Inference: opt.Inference, BindingDigest: native.Subject.BindingDigest, RenderedDigest: native.Subject.RenderedDigest, EvidenceDigest: godigest.FromBytes(evidence).String(), EvidenceRunID: receipt.RunID, Gate: "same-subject"}
+	s := ReleaseLiftSummary{Suite: suite.Name, SuiteDigest: suite.Digest, Member: suite.MemberID, Model: suite.Model, Runtime: suite.Runtime.ID, Target: releaseLiftTarget(native.Subject.Target), SourceTarget: releaseLiftTarget(receipt.Subject.Target), Promote: opt.Promote, ServingModel: servingModel, Inference: opt.Inference, BindingDigest: native.Subject.BindingDigest, RenderedDigest: native.Subject.RenderedDigest, EvidenceDigest: godigest.FromBytes(evidence).String(), EvidenceRunID: receipt.RunID, Gate: gate}
 	for i, doc := range []map[string]any{native.bundle.Provider, native.bundle.Agent} {
 		proof := []suiteNativeOwnedResource{receipt.Provider, receipt.Agent}[i]
+		if gate == "promotion" {
+			// Source execution UIDs cannot authorize existing destination objects.
+			proof = suiteNativeOwnedResource{}
+		}
 		resource, err := worker.inspectReleaseLiftResource(ctx, native.Subject, doc, proof)
 		if err != nil {
 			return nil, err
@@ -165,6 +154,22 @@ func (a *App) PrepareReleaseLift(ctx context.Context, opt ReleaseLiftOptions) (p
 	}
 	s.PlanDigest = godigest.FromBytes(review).String()
 	return &PreparedReleaseLift{options: opt, artifact: artifact, native: native, receipt: receipt, summary: s}, nil
+}
+
+// ValidateReleaseLiftOptions checks selectors without config, retrieval or I/O.
+func ValidateReleaseLiftOptions(opt ReleaseLiftOptions) error {
+	if opt.ToNamespace == "" {
+		opt.ToNamespace = OrkaNamespace
+	}
+	ref, digest, pinned := strings.Cut(opt.Reference, "@")
+	provider := strings.TrimPrefix(opt.Inference, "provider:")
+	if !pinned || !verificationIdentity(ref) || !spec.IsValidDigest(digest) ||
+		!verificationIdentity(opt.ToContext) || scaffold.RefuseKeyShapes(opt.ToContext) != nil ||
+		!strings.HasPrefix(opt.Inference, "provider:") || scaffold.ValidateObjectName(provider) != nil ||
+		scaffold.ValidateNamespace(opt.ToNamespace) != nil || strings.TrimSpace(opt.Evidence) == "" || opt.FromLayout != "" && opt.PlainHTTP {
+		return ErrReleaseLift
+	}
+	return nil
 }
 
 func releaseLiftTarget(t suiteNativeTarget) ReleaseLiftTarget {
