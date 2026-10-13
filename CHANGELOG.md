@@ -24,6 +24,15 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
 
 ### Added
 
+- Private suite-owned kagent v0.10.3 Go/linux-amd64 preparation, create-only
+  placement and observation helpers consume the verified packaged member and
+  explicit OpenAI bindings. Suite ownership is isolated from legacy resources;
+  occupied/unrecorded or changed targets refuse. Repeat placement requires a
+  complete caller-retained observation and is read-only. Partial outcomes retain
+  known identities without claiming success or rollback. No persisted receipt,
+  model/Task execution, suite CLI, lift gate or runtime-dispatch seam is added.
+  [Native workspace profiles](docs/suite-workspace.md).
+
 - Internal read-only digest-lift planning for one-member native suites: bounded
   exact registry/local-layout retrieval, source-free closed packaged loading,
   mandatory private passing-receipt coherence and exact target/binding/runtime
@@ -36,7 +45,8 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
   metadata and the exact OCI manifest; publication copies that prepared graph
   without images or cluster effects. Invalid/unsupported runtime declarations
   refuse; Orka-only preparation/evidence consumers do not execute kagent input.
-  Suite kagent placement/evaluation/gates and RemoteMCP remain future slices.
+  CLI/release-lift kagent placement, suite evaluation/gates and RemoteMCP
+  remain future slices.
   Existing live kagent v0.10.2 create is unchanged.
   [Offline native workspace profiles](docs/suite-workspace.md).
 
