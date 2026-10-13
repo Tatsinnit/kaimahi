@@ -139,6 +139,7 @@ kagent packaged status and retirement are not implemented.
 
 ### Native digest Lift
 
+Root Lift is implemented on current `main` but remains unreleased.
 Root `kmx lift` and `App.PrepareReleaseLift` ingest one exact registry or read-only OCI-layout
 digest, validate the packaged native suite, require a matching private passing
 receipt, observe the selected target and inspect desired resources with GETs.

@@ -50,6 +50,7 @@ kmx quickstart
 | Live Agent | `kmx create --live` creates runtime resources and a PortableAgent bundle. `kmx run --agent NAME --prompt TEXT` performs one Task; `kmx chat NAME` opens an Orka session. |
 | Legacy bundle | Hidden but callable `kmx bundle ...` commands retain PortableAgent operations. They are not AgentSuite commands. |
 ## Runtime Boundaries
+A **runtime** executes and governs the agent. An **inference provider** is the separate model-access binding; selecting one does not select the other.
 - **Orka** is the default runtime. Its packaged workspace path supports evaluation, evaluated publication and root digest Lift with exact evaluated reuse; it also owns live create, run, chat and the legacy bundle lifecycle.
 - **kagent** support is exact-version: v0.10.2 live create; v0.10.3 Go packaged workspace authoring, `eval --bindings`, evaluated publication, create-only root digest Lift, and legacy bundle lift/status/evaluation. Packaged status and retirement are unavailable.
 - **agentsessions** is evaluation and replay integration for the legacy bundle path, not a KMX deployment target.
@@ -110,6 +111,7 @@ CASES += [
     ("kagent occupied reuse claimed", GOOD.replace("kagent refuses occupied targets", "kagent reuses occupied targets"), "Lift row must preserve kagent create-only placement"),
     ("lift qualification missing", GOOD.replace("qualifies root Lift for Orka exact reuse and kagent fresh-target creation", "has tests"), "Lift qualification scope is missing"),
     ("lift qualification broadened", GOOD.replace("root Lift qualification does not prove every promotion, creation or partial-outcome path", "root Lift proves every path"), "Lift qualification limits are missing"),
+    ("lift qualification after table", GOOD.replace("Bounded CI qualifies root Lift for Orka exact reuse and kagent fresh-target creation; root Lift qualification does not prove every promotion, creation or partial-outcome path.\n", "").replace("## Getting Starter: Get Your First Answer", "Bounded CI qualifies root Lift for Orka exact reuse and kagent fresh-target creation; root Lift qualification does not prove every promotion, creation or partial-outcome path.\n## Getting Starter: Get Your First Answer"), "Lift qualification scope is missing"),
     ("late release warning", GOOD.replace(WARNING, "").replace("| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --evidence RECEIPT` plus Orka `--inference provider:NAME` or kagent `--bindings FILE` deploys without building, repacking, or publishing. `--plan` is GET-only; kagent refuses occupied targets; legacy bundle lift is separate. |", "| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --evidence RECEIPT` plus Orka `--inference provider:NAME` or kagent `--bindings FILE` deploys without building, repacking, or publishing. `--plan` is GET-only; kagent refuses occupied targets; legacy bundle lift is separate. |\n" + WARNING.rstrip()), "release/main warning must precede"),
     ("stable table label", GOOD.replace("| Stage | Current development build |", "| Stage | Latest stable release |"), "exact two-column header"),
     ("malformed table separator", GOOD.replace("|---|---|", "|---|"), "separator is missing or malformed"),
@@ -122,6 +124,7 @@ CASES += [
     ("kagent digest lift removed", GOOD.replace("create-only root digest Lift, and ", ""), "kagent version boundary is missing"),
     ("kagent status claimed", GOOD.replace("Packaged status and retirement are unavailable.", "Packaged status is available."), "kagent version boundary is missing"),
     ("agentsessions deployment claimed", GOOD.replace("not a KMX deployment target", "a KMX deployment target"), "agentsessions boundary is missing"),
+    ("runtime provider distinction removed", GOOD.replace("A **runtime** executes and governs the agent. An **inference provider** is the separate model-access binding; selecting one does not select the other.\n", ""), "runtime/inference distinction is missing"),
     ("wrong tap", GOOD.replace("kaimahi-agents/tap/kmx", "other/tap/kmx"), "Homebrew install is missing"),
     ("moving Go source", GOOD.replace("cmd/kmx@v0.5.1", "cmd/kmx@main"), "pinned Go install is missing"),
     ("old Go release", GOOD.replace("cmd/kmx@v0.5.1", "cmd/kmx@v0.5.0"), "pinned Go install is missing"),

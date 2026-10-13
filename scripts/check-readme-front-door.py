@@ -156,10 +156,10 @@ def check(text: str) -> str | None:
         return "README front door: Lift row must preserve runtime-specific bindings"
     if "kagent refuses occupied targets" not in rows[3][1]:
         return "README front door: Lift row must preserve kagent create-only placement"
-    normalized_journey = " ".join(journey.split())
-    if "qualifies root Lift for Orka exact reuse and kagent fresh-target creation" not in normalized_journey:
+    normalized_preamble = " ".join(journey[:table_at].split())
+    if "qualifies root Lift for Orka exact reuse and kagent fresh-target creation" not in normalized_preamble:
         return "README front door: Lift qualification scope is missing"
-    if "root Lift qualification does not prove every promotion, creation or partial-outcome path" not in normalized_journey:
+    if "root Lift qualification does not prove every promotion, creation or partial-outcome path" not in normalized_preamble:
         return "README front door: Lift qualification limits are missing"
 
     answer = section_after(text, matches["first-answer heading"])
@@ -186,6 +186,9 @@ def check(text: str) -> str | None:
             return f"README front door: {label} path boundary is missing"
 
     runtime = section_after(text, matches["runtime boundaries heading"])
+    runtime_boundary = "A **runtime** executes and governs the agent. An **inference provider** is the separate model-access binding; selecting one does not select the other."
+    if runtime_boundary not in " ".join(runtime.split()):
+        return "README front door: runtime/inference distinction is missing"
     for label, pattern in [
         ("Orka default", r"\*\*Orka\*\* is the default runtime\..*packaged workspace path supports\s+evaluation, evaluated publication and root digest Lift with exact evaluated\s+reuse;.*live create, run, chat.*legacy bundle lifecycle"),
         ("kagent version boundary", r"\*\*kagent\*\* support is exact-version.*v0\.10\.2 live\s+create; v0\.10\.3 Go packaged workspace authoring, `eval --bindings`, evaluated\s+publication, create-only root digest Lift, and legacy bundle\s+lift/status/evaluation\. Packaged status and retirement are unavailable\."),

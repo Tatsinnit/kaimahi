@@ -86,6 +86,9 @@ context selection.
 
 ## Runtime Boundaries
 
+A **runtime** executes and governs the agent. An **inference provider** is the
+separate model-access binding; selecting one does not select the other.
+
 - **Orka** is the default runtime. Its packaged workspace path supports
   evaluation, evaluated publication and root digest Lift with exact evaluated
   reuse; it also owns live create, run, chat and the legacy bundle lifecycle.
@@ -96,8 +99,7 @@ context selection.
 - **agentsessions** is evaluation and replay integration for the legacy bundle
   path, not a KMX deployment target.
 
-Runtime choice and inference choice are independent. The [runtime support
-matrix](docs/runtime-adapters.md#revision-pinned-support-and-qualification-matrix)
+The [runtime support matrix](docs/runtime-adapters.md#revision-pinned-support-and-qualification-matrix)
 records exact pins and evidence rather than claiming feature parity.
 
 ## Safety And Status
