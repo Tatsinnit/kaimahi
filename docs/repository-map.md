@@ -48,7 +48,7 @@ examples or fabricated callers are needed to preserve mechanical coverage.
 | `cmd/` | `kmx` | — | — |
 | `agentsuite/` | public specification, Go model, schemas and conformance validator | — | conformance fixtures |
 | `internal/` | `kmx/` (17 packages), including schema fixtures | — | experimental lifecycle contracts and tests |
-| `pkg/` | — | — | experimental KMX target and agent lifecycle contracts |
+| `pkg/` | — | — | experimental KMX environment setup, AgentSuite and deployment contracts |
 | `ax-harness/` | preview projector source only; no built image or kmx adapter | — | synthetic Python tests |
 | `k8s/` | two embedded native manifests | — | native packaging checks |
 | `scripts/` | 4 (4 embedded in the binary, 0 operator) | 0 | 51 (checkers, release packaging, native CI runners, qualification fixtures, mutation specs) |
@@ -140,7 +140,7 @@ files or judge cases in the live CLI agent fixture.
 | `kmx/runview` | 1 | Installed | In-memory, runtime-neutral run, Task, agent, hand-off and missing-evidence presentation types. |
 | `kmx/runview/orka` | 1 | Installed | Bounded Orka Task lineage, event and trace reader with caller-scoped reads and safe projection. |
 | `kmx/runtime` | 13 | Installed | Platform-neutral adapter/session and lifecycle contracts, identities, capabilities, events, bundle digests, registry, portable Orka/Kagent authoring union, target bindings, strict legacy/typed evaluation cases, RE2 validation, ephemeral assertion evaluation and payload-free result digests, strict versioned session-reference manifests and assertion-only authored cases. `evaluation_judge.go` owns the versioned judge policy, identity/configuration digests, optional evaluator port evidence and two-score/threshold coherence; HTTP stays in App. `prepared.go` checks behavior before target-bound rendering; `kagent_bindings.go` adds closed creation-target bindings. Only Orka is registered for chat/discovery. |
-| `kmx/lifecycle` | 4 | Scaffolding | Experimental internal platform and runtime ports; runtime-native documents/bundles, deploy options, recovery interfaces and receipt factories behind the public `pkg/kmx` workflows. Focused AgentSuite builder, packing, storage and transfer ports remain in `internal/kmx/agentsuite`. |
+| `kmx/lifecycle` | 4 | Scaffolding | Experimental deployment runtime ports; runtime-native documents/bundles, deploy options, recovery interfaces and deployment/retirement receipt factories behind the public `pkg/kmx` workflow. Environment setup has no mirrored southbound SPI. Focused AgentSuite builder, packing, storage and transfer ports remain in `internal/kmx/agentsuite`. |
 | `kmx/scaffold` | 6 | Installed | Native Orka authoring, exact Kagent v0.10.2 review scaffolding in `kagent.go`, shared name validators, YAML helpers and file writing. Model-overlay and migration generators are removed. |
 | `kmx/orkaschema` | 3 | Installed | Structural schema validator, attribution and upstream licence. |
 | `kmx/orkaschema/fixtures/v0.1.3` | 3 | Installed | Historical release Agent/Provider/Task CRDs for explicit offline validation, not installation. |
@@ -162,12 +162,13 @@ credential-shape and loopback-forwarding helpers retain their native callers.
 
 ## `pkg/` — experimental public contracts
 
-`pkg/kmx` is alpha design evidence for a wider KMX interface. It defines neutral
-agent revisions, staged AgentSuite validate/build/push values and sandbox-image OCI identities, targets,
-deployments, scoped receipts, and the northbound `AgentEnvironment`,
-`AgentSuites`, and `AgentDeployments` workflows. Platform/suite/runtime ports and
-native build artifacts remain internal. It is not wired into the installed CLI
-and makes no compatibility commitment.
+`pkg/kmx` is alpha design evidence for a wider KMX interface. It defines a
+setup-only logical `AgentEnvironment`, neutral agent revisions, staged AgentSuite
+validate/build/push values and sandbox-image OCI identities, targets,
+deployments, deployment/retirement receipts, and the northbound
+`AgentSuites` and `AgentDeployments` workflows. Focused suite and deployment
+runtime ports plus native build artifacts remain internal. It is not wired into
+the installed CLI and makes no compatibility commitment.
 Architecture tests keep its production dependency closure in the Go standard
 library and reject known concrete runtime, Kubernetes, cloud, subprocess, and
 terminal names from exported names or serialized fields.
