@@ -24,8 +24,17 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
 
 ### Added
 
+- One-member workspace authoring/prepare/load supports explicit kagent v0.10.3
+  Go/linux-amd64 alongside default Orka. Runtime is bound in private native
+  metadata and the exact OCI manifest; publication copies that prepared graph
+  without images or cluster effects. Invalid/unsupported runtime declarations
+  refuse; Orka-only preparation/evidence consumers do not execute kagent input.
+  Suite kagent placement/evaluation/gates and RemoteMCP remain future slices.
+  Existing live kagent v0.10.2 create is unchanged.
+  [Offline native workspace profiles](docs/suite-workspace.md).
+
 - Root `kmx eval` evaluates the full ordered inventory of one tool-free native
-  workspace, with explicit `--to-context`, `--inference provider:NAME` and a new
+  Orka workspace, with explicit `--to-context`, `--inference provider:NAME` and a new
   private `--out` file. Offline inventory/budget/output checks precede cluster
   configuration; one guard covers owned Provider/Agent placement and one fresh,
   never-retried Task per case. Fail/unknown/drift/cancel/output errors stop later
