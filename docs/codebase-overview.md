@@ -96,7 +96,7 @@ Bare `local up` creates no Agent. The setup-only `pkg/kmx.AgentEnvironment`
 contract maps conceptually to this operation but is not wired to it. Quickstart
 adds live creation and execution and therefore is not only environment setup.
 
-### Workspace create, prove and publish
+### Workspace create, prove and publish; packaged-digest lift
 
 ```text
 kmx create NAME
@@ -119,6 +119,12 @@ kmx push [--evaluation RECEIPT] REF
   -> exact prepared OCI graph copied to layout or registry
   -> optional receipt coherence check
   -> optional unsigned provenance on registry publication
+
+kmx lift REF@sha256:DIGEST --to-context CTX \
+  --inference provider:NAME --evidence RECEIPT
+  -> source-free bounded retrieval of that exact OCI graph
+  -> evidence and packaged identity revalidation
+  -> GET-only plan or guarded create/exact reuse on an explicit target
 ```
 
 The public graph digest, authored-source fingerprint and OCI manifest digest are
@@ -127,19 +133,27 @@ binds supplemental native metadata and cases. Push never deploys.
 
 Native Orka workspace evaluation is implemented and continuously qualifies one
 fixed two-case scenario. Kagent v0.10.3 Go workspace authoring and ordinary
-publication are implemented, but public suite evaluation, lift and status are
+publication are implemented, but kagent suite evaluation, lift and status are
 not.
 
-### Read-only digest-lift planning
+### Native digest Lift
 
-`App.PrepareReleaseLift` can ingest one exact registry or read-only OCI-layout
+Root `kmx lift` and `App.PrepareReleaseLift` ingest one exact registry or read-only OCI-layout
 digest, validate the packaged native suite, require a matching private passing
 receipt, observe the selected target and inspect desired resources with GETs.
-It returns an immutable identity-only plan.
+Preparation returns an immutable identity-only plan. `--plan` stops there,
+without a mutation guard, admission, writes, Tasks or placement records.
 
-This is an internal planning boundary. It performs no admission dry run, write,
-Task, placement record or cross-target promotion, and there is no root `kmx lift`
-command yet.
+Apply revalidates the artifact, evidence, prerequisites and owned-resource proof,
+then guards the target, preflights both absent creates and consumes the plan once.
+It only creates absent resources or exactly reuses receipt-bound resources; it
+never updates, adopts, retries ambiguous writes, rolls back or cleans up. Partial
+outcomes retain acknowledged identities. `--promote` explicitly permits an
+eligible destination where both suite-owned resources are absent, with the same
+exact packaged identity and pinned runtime profile plus a Ready `openai` Provider
+declaring that packaged model; its evidence proves the source only.
+Created resources need fresh evaluation before later receipt-bound reuse.
+Root Lift is not currently qualified against a real cluster.
 
 ### Legacy PortableAgent path
 

@@ -151,7 +151,9 @@ checks strict private receipt coherence and exact manifest S before publication;
 ordinary push is unevaluated. Receipts are unsigned observations, not policy gates.
 Hermetic command/Task tests alone do not qualify real execution; the existing
 Orka shard separately qualifies one fixed two-case native workspace scenario.
-Reference lift remains unavailable. See [suite workspace](suite-workspace.md).
+Root `lift REF@sha256:DIGEST` consumes that explicit private full-pass evidence
+for source-free, deploy-only native Orka placement; root Lift is not currently
+qualified against a real cluster. See [suite workspace](suite-workspace.md).
 
 ## Vocabulary
 

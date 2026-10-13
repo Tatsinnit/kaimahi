@@ -1,9 +1,10 @@
 # Kaimahi documentation
 
 **KMX is the Agent Builder CLI. Runtimes execute and govern agents.** Start with
-the first-answer or suite-workspace path below. The PortableAgent bundle guide is
-the current legacy deployment path, not the future AgentSuite Lift story; use the
-runtime contract when extending or comparing implementations.
+the first-answer or suite-workspace path below. A native Orka workspace can be
+evaluated and published, then its packaged digest can be lifted separately; the
+PortableAgent bundle guide documents the legacy deployment path. Use the runtime
+contract when extending or comparing implementations.
 
 ## Current operator paths
 
@@ -14,7 +15,7 @@ runtime contract when extending or comparing implementations.
 | Install Orka, inspect before applying, or see the version actually running | [Orka](orka.md) |
 | Create live resources and bundles: `kmx create --live` for Orka, or add `--runtime kagent` for preinstalled exact v0.10.2 | [Native Orka create](orka.md#author-an-orka-agent-and-get-an-answer), [CLI contract](kmx.md#kmx-create) |
 | Define or validate a portable OCI AgentSuite with bundled or remote ToolProviders and standalone provider sandbox images | [AgentSuite Artifact Specification](../agentsuite/spec.md) |
-| Author one native suite member offline, evaluate the Orka profile, and publish the exact OCI graph without member images | [Suite workspace](suite-workspace.md) |
+| Author one native suite member offline, evaluate the Orka profile, publish the exact OCI graph, and lift that digest | [Suite workspace](suite-workspace.md) |
 | Discover models and configure native inference | [Models](models.md), [Copilot inference](copilot-inference.md), [Foundry inference](local-foundry-inference.md) |
 | Chat with an existing Orka Agent | [Interactive chat](interactive-chat.md) |
 | Operate the legacy PortableAgent lift/status/evaluate/verify/retire path | [Legacy bundle lifecycle](agent-lift.md) |
@@ -30,8 +31,8 @@ in [orka.md](orka.md). Bounded kagent profiles target preinstalled exact v0.10.2
 for create and exact v0.10.3 for declarative legacy bundle
 lift/status/evaluation plus workspace authoring/publication. Neither is a YAML
 translation over Orka or a restoration of the former broad command surface.
-Standalone run/chat, suite evaluation/lift/status, updates, retirement and image
-placement remain unsupported. Existing retired commands/manifests and
+For kagent, standalone run/chat, suite evaluation/lift/status, updates,
+retirement and image placement remain unsupported. Existing retired commands/manifests and
 the removed conversion spike are not evidence of one.
 
 ## Maintainer references

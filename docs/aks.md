@@ -55,13 +55,14 @@ looking for a spelling instead of a replacement. An existing legacy lift can
 still be inspected and torn down with `kmx aks down`; what is refused is
 creating or resuming one.
 
-Root `lift` and `lift down` aliases are removed outright. Use `kmx aks up`
-and `kmx aks down`; existing run records and historical ownership teardown
-remain unchanged.
+The former root `lift` AKS-provisioning alias and `lift down` are removed
+outright. Use `kmx aks up` and `kmx aks down`; root
+`kmx lift REF@sha256:DIGEST` now means one-member native Orka package deployment.
+Existing run records and historical ownership teardown remain unchanged.
 
 **This is a fresh-install path, not a version upgrade.** An existing v0.1.3
 manifest installation or foreign Helm release is refused. On an existing AKS
-cluster, do not simply remove the old release and rerun lift: first back up
+cluster, do not simply remove the old release and rerun `kmx aks up`: first back up
 the existing controller PVC and other data volumes, resources and Secrets,
 including a snapshot key if this installation has one, **without printing key
 values**; verify your

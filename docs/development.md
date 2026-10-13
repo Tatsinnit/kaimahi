@@ -76,7 +76,10 @@ exact-S local-layout transfer and ownership/unsupported-evaluator refusal audits
 Private command captures are never artifacts; only passing receipt metadata and
 a scalar qualification report are uploaded. A successful run qualifies the fixed
 two-case native workspace scenario; hermetic tests alone do not establish runtime
-execution. This adds no release lift or standalone packaged evaluation.
+execution. Root digest Lift separately consumes the private passing receipt for
+deploy-only native Orka placement. Its command/apply tests are hermetic; root Lift
+is not currently qualified against a real cluster. Standalone packaged evaluation
+is unavailable.
 
 ## Repository layout
 

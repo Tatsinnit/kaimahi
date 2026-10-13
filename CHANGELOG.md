@@ -35,7 +35,8 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
   Text/JSON outcomes distinguish created, reused, unknown and not-attempted from
   readiness, retaining partial acknowledged identities without rollback/cleanup.
   Newly created/recreated resources need fresh evaluation before subsequent reuse.
-  Signing/authentication is not claimed; live lift qualification remains separate.
+  Signing/authentication is not claimed; root Lift is not currently qualified
+  against a real cluster.
 
 - Private suite-owned kagent v0.10.3 Go/linux-amd64 preparation, create-only
   placement and observation helpers consume the verified packaged member and
@@ -108,8 +109,9 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
 - Default `kmx create <name>` authors one native-Orka AgentSuite member offline.
   `kmx push --workspace DIR REF` prepares and publishes its exact OCI graph, including
   authored cases, with no member image build or cluster access. Existing bundle
-  behavior and extracted-directory suite transfer are unchanged. Release lift
-  is not available; full workspace evaluation is described above. Registry workspace pushes share the default
+  behavior and extracted-directory suite transfer are unchanged. This author/push
+  slice performs no deployment; root exact-digest Lift is described above. Full
+  workspace evaluation is described above. Registry workspace pushes share the default
   unsigned provenance policy, opt-out/required flags and matching-HEAD source
   commit claims; prepared graph bytes stay unchanged. [Workspace guide](docs/suite-workspace.md).
 
@@ -120,12 +122,12 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
 
 - The repository front door now separates the stable v0.5.1 quickstart from the
   unreleased suite-first development path, leads with a compact
-  Create/Prove/Publish/future-Lift table, names runtime boundaries explicitly,
+  Create/Prove/Publish/Lift table, names runtime boundaries explicitly,
   and labels `agent.yaml` guidance as legacy. New developer-facing codebase and
   interface guides document current package flows, command surfaces and the
   setup-only `AgentEnvironment` boundary. README self-tests enforce the release
-  warning, table columns/order, full-pass evidence, non-deploying push and
-  unimplemented suite Lift.
+  warning, table columns/order, full-pass evidence, non-deploying push, exact
+  digest-Lift command, deploy-only behavior and GET-only planning.
 
 - `kmx bundle` (legacy `agent.yaml` lift, status, evaluate, retire, verify) is hidden from
   help and completion ahead of its removal; the commands still run.

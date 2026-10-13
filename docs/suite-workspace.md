@@ -16,9 +16,12 @@ suite evaluation, status and promotion remain unavailable. Occupied targets
 refuse without a complete caller-retained observation; qualified repeat is
 read-only, not update/adoption or restart recovery.
 Orka evaluation has hermetic command/Task tests and a pinned two-case native
-workspace CI qualifier. Standalone registry-package evaluation and registry-reference lift
-are not available. Existing `agent.yaml` creation, evaluation and lift remain
-separate and unchanged.
+workspace CI qualifier. Root exact-digest Lift retrieves the package from a
+registry or local layout and separately consumes an explicit private full-passing
+evidence file. Its planning/apply tests are hermetic; root Lift is not currently
+qualified against a real cluster.
+Standalone registry-package evaluation is not available. Existing `agent.yaml`
+creation, evaluation and lift remain separate and unchanged.
 
 ## Create
 
@@ -169,7 +172,8 @@ ownership, case-mutation and unsupported-evaluator refusals. Only passing receip
 metadata and a scalar qualification report may be uploaded. Runtime/model and
 Kubernetes audit storage can still retain inputs. A successful run qualifies this
 fixed scenario; hermetic tests alone do not establish runtime/model execution.
-Release-reference Lift and standalone package evaluation remain unavailable.
+It does not qualify real-cluster release Lift. Standalone package evaluation
+remains unavailable; root digest Lift is the separate deploy-only operation below.
 
 ## Publish
 

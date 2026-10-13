@@ -1,12 +1,12 @@
 # Suite-first lifecycle: objects and everyday commands
 
-**Status:** Direction, partly implemented; discussed in [#328](https://github.com/kaimahi-agents/kaimahi/issues/328). Current `main` implements one-member workspace authoring, native Orka evaluation, exact OCI publication, suite diff, bounded native CI qualification, private kagent package/placement helpers and internal read-only digest-lift planning. Root suite `lift`, suite deployment status and workspace run/chat are not implemented. Open questions below are owned by the linked issues.
+**Status:** Direction, partly implemented; discussed in [#328](https://github.com/kaimahi-agents/kaimahi/issues/328). Current `main` implements one-member workspace authoring, native Orka evaluation, exact OCI publication, suite diff, bounded native CI qualification, private kagent package/placement helpers, and deploy-only native Orka Lift by digest. Suite deployment status, workspace run/chat, operational kagent suite Lift and general image-backed placement are not implemented. Open questions below are owned by the linked issues.
 
 ## Direction
 
 The workspace is what people author; the suite is the portable release and lifecycle object. Everyday commands stay few, while their internals are split into small capabilities.
 
-This develops the [walkthrough](https://github.com/kaimahi-agents/kaimahi/issues/328#issuecomment-6104051141) and Tatsinnit's reply, alongside the [lifecycle interface decision](kmx-lifecycle-interfaces.md), not as a replacement for it. Follow-ups belong to [#344](https://github.com/kaimahi-agents/kaimahi/issues/344). The merged [#355](https://github.com/kaimahi-agents/kaimahi/pull/355) makes the portable format public in `agentsuite/`; construction and transfer remain internal. Native and future image-backed placement share the intended root `lift` entry point rather than introducing `suite lift` as a second lifecycle.
+This develops the [walkthrough](https://github.com/kaimahi-agents/kaimahi/issues/328#issuecomment-6104051141) and Tatsinnit's reply, alongside the [lifecycle interface decision](kmx-lifecycle-interfaces.md), not as a replacement for it. Follow-ups belong to [#344](https://github.com/kaimahi-agents/kaimahi/issues/344). The merged [#355](https://github.com/kaimahi-agents/kaimahi/pull/355) makes the portable format public in `agentsuite/`; construction and transfer remain internal. Current one-member native Orka placement uses root `lift`; future image-backed placement should extend that verb rather than introduce `suite lift` as a second lifecycle.
 
 ## What the user holds
 
@@ -19,7 +19,7 @@ These are distinct objects, not interchangeable names for one directory. “Rele
 | Member images (Agent Sandbox Images) | Runnable OCI manifest digest per member/platform, linked to the exact suite artifact, composition, build profile and sandbox binding; retain any index digest separately | Current `suite build` is an experimental one-composition builder; complete suite build remains future | No; rebuilding may produce new digests | Local image store/archive, then registry |
 | Release artifact | AgentSuite OCI manifest digest plus an immutable association to every required member image digest; native profiles currently require no member images, while general release association remains open | Current workspace preparation produces the exact native OCI artifact; general release assembly remains future | No | KMX private local layout, portable layout or registry |
 | Published release | The same artifact and image identities, with retrieval references; a tag is a mutable locator, not identity | Current root `push` | Content no; tags/locations yes | OCI registry or local OCI layout |
-| Target-bound deployment | Deployment ID tied to artifact, selected members/images, runtime installation, durable target and target/inference binding identities; exact aggregate identity is open | Future root `lift`; internal GET-only planning exists, apply does not | Live state yes; changed inputs require a new recorded revision | Runtime placement/registration plus private operation and deployment records |
+| Target-bound placement | Exact artifact, runtime, target and target/inference binding observations; durable aggregate deployment identity is open | Root `lift` places one-member native Orka packages with guarded create/exact reuse | Live state yes; changed packaged identity requires new evidence, while explicit promotion requires an eligible destination with both suite-owned resources absent | Runtime resources and ownership markers; the opaque successful placement remains in process, with no aggregate deployment record |
 | Evaluation evidence | Evaluation run ID and immutable subject/case-set identities, with per-case outcomes and execution references | Current root `eval` for native Orka; only a full pass exports a private receipt | Completed evidence no; another run creates new evidence | Private evidence file; distributable attestations remain future |
 
 The [AgentSuite specification](../agentsuite/spec.md) distinguishes canonical graph identity from OCI manifest identity. Neither is an image digest. Packaging and registry relocation must not be confused with source edits. A Kubernetes context supplies access; durable target identity is not its name. A deployment is placement or registration; a run is a Task, Session or equivalent invocation, not another deployment.
@@ -28,8 +28,11 @@ The [AgentSuite specification](../agentsuite/spec.md) distinguishes canonical gr
 
 This current-`main` recipe requires a prepared Orka target with a Ready Provider,
 its Secret reference and result-reader access. It authors source, evaluates the
-exact package and publishes that same identity; it does not deploy the published
-artifact.
+exact package, publishes that same identity, then reviews and applies an
+exact-digest Lift. Default reuse requires equality with the complete evaluated
+subject. Any eligible target or binding difference requires `--promote`, absent
+destination resources and the same packaged identity/runtime profile; its evidence
+still proves only the source.
 
 ```sh
 mkdir my-agents && cd my-agents && git init
@@ -44,53 +47,63 @@ kmx eval --workspace . --to-context kind-demo \
 
 kmx push --workspace . --evaluation ../private-evidence/passing.json \
   ghcr.io/me/my-agents:v1
+
+kmx lift ghcr.io/me/my-agents@sha256:<digest> --to-context kind-demo \
+  --inference provider:local --evidence ../private-evidence/passing.json --plan
+kmx lift ghcr.io/me/my-agents@sha256:<digest> --to-context kind-demo \
+  --inference provider:local --evidence ../private-evidence/passing.json
 ```
 
-The command prints the prepared OCI manifest digest; use that digest rather than
-the mutable tag when comparing or planning. Prompts and answers stay out of the
-receipt, but the published suite includes authored case inputs.
+Push prints the prepared OCI manifest digest; use that digest rather than the
+mutable tag for Lift. Prompts and answers stay out of the receipt, but the
+published suite includes authored case inputs. Lift never builds, repacks or
+publishes. `--plan` is GET-only; apply creates absent resources or reuses exact
+receipt-bound resources, without update, adoption, ambiguous retry or rollback.
 
-## Future everyday journey
+## Lift now, status and execution later
 
-The intended continuation remains:
+The command split is:
 
 ```text
-kmx lift REF@sha256:...  # retrieve, verify, gate and place; never build
-kmx status               # suite deployment status
-kmx run / kmx chat       # select a deployed suite member
+kmx lift REF@sha256:DIGEST --to-context CTX --inference provider:NAME --evidence FILE
+                         # current: retrieve, verify, gate and place; never build
+kmx status               # current: Orka runtime status, not suite deployment status
+kmx run / kmx chat       # current: select an existing live Orka Agent
 ```
 
-These suite meanings are not current commands. Root `status` still reports Orka
-runtime installation state, while run/chat target existing live Orka Agents.
-Internal exact-digest planning performs GETs only and creates no placement.
-Runtime is expected to come from the member and evidence; lift is not a runtime
-switch.
+Suite-aware status and member selection for run/chat are not current commands.
+Root Lift's `--plan` performs GETs only; apply uses a guarded, single-use plan.
+Runtime and model come from the package; Lift is not a runtime or model switch.
+Evidence must agree with them but does not select them.
+Created/recreated resources require fresh evaluation before later
+receipt-bound reuse, and readiness is not destination execution evidence.
 
-Commands find the workspace by walking up from the current directory to `workspace.yaml`, the way git finds `.git`; `--workspace` selects an exact root without fallback. Eval and push print the workspace and suite digest they used, because evidence binds to that suite. When create finds no workspace, it asks in a terminal whether to start one in the current directory; without a terminal it refuses with a hint to pass `--workspace`. Future lift by digest needs no workspace.
+Commands find the workspace by walking up from the current directory to `workspace.yaml`, the way git finds `.git`; `--workspace` selects an exact root without fallback. Eval and push print the workspace and suite digest they used, because evidence binds to that suite. When create finds no workspace, it asks in a terminal whether to start one in the current directory; without a terminal it refuses with a hint to pass `--workspace`. Lift by digest needs no workspace.
 
 Everyday create/chat/run/eval/push commands now sit at the root and `kmx agent`
 is removed. Less frequent operations stay under nouns: `suite
 build|diff|pull|push|validate`, `eval diff|from-sessions`, `task`, hidden `aks`,
 `local`, `orka` and `targets`. Removed root AKS aliases leave `lift` reserved for
-the future suite operation. Root `status` and `orka status` currently retain the
+the packaged-suite operation. Root `status` and `orka status` currently retain the
 same Orka runtime report.
 
 | Current path | Relationship to the direction |
 |---|---|
 | Root `create`, `eval`, `push` | Implemented suite workspace authoring, native Orka proof and exact publication. |
+| Root `lift REF@sha256:DIGEST` | Implemented deploy-only one-member native Orka placement with mandatory private evidence; not currently real-cluster qualified. |
 | Root `chat`, `run`; `create --live` | Still target live Orka resources and PortableAgent artifacts, not workspace-local execution. |
 | Hidden `bundle evaluate/lift/retire/status/verify` | Legacy lifecycle retained until suite-path parity; its receipts are not suite evidence. |
 | `suite push DIRECTORY REFERENCE` | Existing extracted-artifact transfer without workspace discovery; root `push` is the workspace-aware operation. |
 | Future image-backed path | Member authoring joins root create; publication joins root push; deployment uses root lift rather than `suite lift`. |
 
-Keep **Create → Prove → Lift**, as [#302](https://github.com/kaimahi-agents/kaimahi/pull/302) and the [command alignment record](command-semantics.md) decided. Root `lift` is now free but unimplemented. Follow the [command conventions](command-conventions.md), including aligned help, interactive labels, recovery commands and compatibility tests, when it ships.
+Keep **Create → Prove → Lift**, as [#302](https://github.com/kaimahi-agents/kaimahi/pull/302) and the [command alignment record](command-semantics.md) decided. Root `lift` now implements the bounded native Orka path. Follow the [command conventions](command-conventions.md), including aligned help, interactive labels, recovery commands and compatibility tests, when extending it.
 
 ## Explicit decisions
 
 - `push` produces the suite and every member image the selected execution path needs (none for native-Orka declarative members), with an immutable link to each.
 - Lift from a registry reference is deploy-only: no builder and no registry push credentials; missing images cause refusal, not an implicit build.
-- `lift .` is a convenience using the same identities and planning, not a second deployment engine.
-- A model binding chosen at lift changes the deployment and evaluation subject even when suite and images are unchanged.
+- Current Lift accepts only `REF@sha256:DIGEST`, optionally with `--from-layout DIR`; it does not discover a workspace or accept `lift .`.
+- Runtime and model come from the package. The selected Provider/Secret binding is part of the subject; an eligible changed destination requires explicit source-evidence `--promote`, not model substitution.
 - Old bundle receipts stay readable for their original lifecycle but do not count as suite or image evidence.
 - Multi-agent evaluation needs a member-selection rule: every member, exported entrypoints, or a declared invocation closure remains open.
 - AgentSuite covers local and remote runs; local commands compose suite operations rather than adding a separate lifecycle. A quick local preview may skip packaging, but only a run of the exact packaged suite counts as promotion evidence.
@@ -105,7 +118,7 @@ Keep **Create → Prove → Lift**, as [#302](https://github.com/kaimahi-agents/
 
 ## What evaluation evidence binds to
 
-Evidence must bind the selected **member, image digest, composition, inference binding, runtime/target and case-set digest**, as well as suite/artifact identity. Record selection coverage, assertion/evaluator identities where relevant, per-case outcomes and execution references; missing or unknown evidence cannot establish a pass. A local trial before push is not automatically evidence for the subsequently built images. Changed model bindings require matching evaluation evidence, not reuse based only on unchanged suite bytes.
+Evidence must bind the selected **member, image digest, composition, inference binding, runtime/target and case-set digest**, as well as suite/artifact identity. Record selection coverage, assertion/evaluator identities where relevant, per-case outcomes and execution references; missing or unknown evidence cannot establish a pass. A local trial before push is not automatically evidence for subsequently built images. Changed packaged identity or runtime profile requires matching evaluation evidence. Explicit `--promote` may retain source evidence only for an eligible destination where both suite-owned resources are absent and the packaged identity/runtime profile matches; that is not destination evaluation or authenticated approval.
 
 OCI referrers provide distribution and discovery across machines. They do not establish trust: signing, accepted signers and promotion policy remain open under [#350](https://github.com/kaimahi-agents/kaimahi/issues/350). Evidence for one target or inference binding must not silently qualify another; policy must state any permitted promotion relationship. Keep credentials and execution payloads out of public evidence.
 
@@ -129,8 +142,8 @@ The agreed end state removes bundles rather than reading them as one-agent
 workspaces or migrating them. That keeps one model and no converter code.
 Removal has not happened yet and waits for parity on the suite path, in order:
 
-1. Native Orka: create, eval, push and lift by digest (#430).
-2. The lift gate on suite evidence, replacing `lift-policy.yaml` over bundle receipts.
+1. Native Orka create, eval, push and deploy-only lift by digest are implemented (#430); aggregate status, retirement and member execution remain open.
+2. Root Lift requires exact private suite evidence; distributable authenticated policy and broader promotion semantics remain open.
 3. kagent as a suite target, replacing kagent bundle create, lift, status and evaluation. kagent remote MCP tools are not a precondition: they may be unavailable for a while and return on the suite path.
 4. Quickstart, console and interactive lift through create → lift, so `create --live` can go.
 
@@ -143,5 +156,5 @@ Then one deliberate breaking change deletes the `bundle` commands, bundle receip
 3. Which members does `eval` select, and how is full coverage recorded? **Owner:** #350.
 4. Which signatures and policies permit promotion across targets or model bindings? **Owner:** #350; signer policy is not yet decided.
 5. How are target/binding identities, aggregate deployment revisions, partial outcomes, recovery and retained retirement recorded? **Owners:** #348, #346 and #347; session-runtime conformance belongs to #352.
-6. How do destination/inference flags and member run/chat selection converge with root `lift`? **Owners:** #301/#302 and #351, coordinated with #447.
+6. How do lifted-member run/chat selection and aggregate status converge with the implemented root Lift destination/inference contract? **Owners:** #301/#302 and #351, coordinated with #447.
 7. How does a lifted suite member get chatted with on its destination? Today's chat targets live Agents, and suite-owned objects deliberately refuse legacy access. **Owner:** #344.

@@ -376,13 +376,16 @@ runtime recipe.
 The installed local suite journey already composes independently:
 
 ```text
-kmx create -> kmx local up -> kmx eval -> kmx push
+workspace create -> local setup -> workspace eval -> package push
+                                                  -> packaged-digest lift
 ```
 
 That is evidence for keeping workspace/AgentSuite identity separate from
 environment setup, not evidence that the commands use the northbound interfaces.
 The native execution profile requires no member image and does not implement the
-first image-backed northbound Build/Push contract.
+first image-backed northbound Build/Push contract. Installed root digest Lift is
+an internal native-Orka application path, not an implementation of the alpha
+suite-wide `AgentDeployments` model above.
 
 ## Evidence required before stability
 

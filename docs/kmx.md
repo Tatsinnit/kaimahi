@@ -687,7 +687,7 @@ delegation limits ([bundle format](agent-lift.md#coordination-in-agentyaml)). Us
   instructions, model, Orka tools, skills and rate limits); `bindings.yaml`
   records **only the creation target** (namespace, Provider type and endpoint,
   Azure deployment/optional API version when applicable, Secret name/key reference,
-  never a value). A future lift will obtain other
+  never a value). A later `kmx bundle lift` obtains other
   targets' bindings from its flags and kmx's local state, not additional bundle
   files. A new bundle also gets one example evaluation case,
   `eval/example.yaml`, for [`kmx bundle evaluate`](agent-lift.md#evaluating-a-deployed-revision);

@@ -37,7 +37,7 @@ JOURNEY_ROWS = [
     ("Create", r"`kmx create NAME\b"),
     ("Prove", r"`kmx eval --workspace DIR\b"),
     ("Publish", r"`kmx push --workspace DIR --evaluation RECEIPT REF`"),
-    ("Lift", r"\*\*Not implemented for AgentSuites on current `main`\.\*\*"),
+    ("Lift", r"`kmx lift REF@sha256:DIGEST --to-context CTX --inference provider:NAME --evidence RECEIPT`"),
 ]
 FENCE = re.compile(r"^```[^\n]*\n(.*?)^```", re.M | re.S)
 NEXT_SECTION = re.compile(r"^## ", re.M)
@@ -126,8 +126,12 @@ def check(text: str) -> str | None:
         return "README front door: Publish row must say it does not deploy"
     if "Plain `kmx push REF` remains explicitly unevaluated" not in rows[2][1]:
         return "README front door: Publish row must keep plain push unevaluated"
-    if re.search(r"`kmx lift(?:\s|`)", journey):
-        return "README front door: suite lift is not implemented on current main"
+    if "without building, repacking, or publishing" not in rows[3][1]:
+        return "README front door: Lift row must stay deploy-only"
+    if "`--plan` is GET-only" not in rows[3][1]:
+        return "README front door: Lift row must preserve the GET-only plan boundary"
+    if "not currently qualified against a real cluster" not in journey:
+        return "README front door: root Lift must not claim real-cluster qualification"
 
     answer = section_after(text, matches["first-answer heading"])
     blocks = list(FENCE.finditer(answer))
@@ -142,7 +146,7 @@ def check(text: str) -> str | None:
 
     runtime = section_after(text, matches["runtime boundaries heading"])
     for label, pattern in [
-        ("Orka default", r"\*\*Orka\*\* is the default runtime.*workspace\s+evaluation/evaluated-publication.*live create, run, chat.*legacy\s+bundle lifecycle"),
+        ("Orka default", r"\*\*Orka\*\* is the default runtime.*workspace\s+evaluation/evaluated-publication/digest-lift.*live create, run, chat.*legacy\s+bundle lifecycle"),
         ("kagent version boundary", r"\*\*kagent\*\* support is exact-version.*v0\.10\.2 live\s+create; v0\.10\.3 Go workspace authoring/publication and legacy bundle\s+lift/status/evaluation\. Public suite evaluation, lift and status are not\s+available\."),
         ("agentsessions boundary", r"\*\*agentsessions\*\* is evaluation and replay integration for the legacy bundle\s+path, not a KMX deployment target\."),
     ]:

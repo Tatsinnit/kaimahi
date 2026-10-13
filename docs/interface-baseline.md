@@ -15,6 +15,7 @@ kmx
 │   ├── diff <before.json> <after.json>
 │   └── from-sessions <session-uid>...
 ├── push <reference>
+├── lift <ref>@<digest>
 ├── run [<bundle-dir>]
 ├── chat <name> [message...]
 ├── quickstart
@@ -55,16 +56,17 @@ Hidden but callable:
 | `kmx aks up/down` | Guarded AKS compatibility path with historical ownership records |
 | `kmx quickstart-wizard` | Retirement stub directing callers to `quickstart --interactive` |
 
-Removed outright: `kmx agent`, root `ctx`, `up`, `down`, `lift`, and `lift down`.
-They are not compatibility aliases. Root `lift` is reserved for a future suite
-workflow and is not implemented.
+Removed outright: `kmx agent`, root `ctx`, `up`, `down`, the former
+AKS-provisioning meaning of root `lift`, and `lift down`. They are not
+compatibility aliases. Root `lift <ref>@<digest>` is now the distinct deploy-only
+one-member native Orka suite operation.
 
 ## Everyday object flow
 
 ```text
 Workspace --create/eval--> AgentSuite artifact --push--> OCI location
-     |                             |
-     |                             +-> future suite lift (not implemented)
+     |                                               |
+     |                                               +-> exact-digest native lift
      |
      +-> create --live -----------> PortableAgent bundle
                                       -> hidden bundle lifecycle
@@ -75,6 +77,7 @@ Workspace --create/eval--> AgentSuite artifact --push--> OCI location
 | `create` | Workspace | Author one offline member; no cluster or model call |
 | `eval` | Workspace/prepared AgentSuite | Place exact native Orka content, run cases in order, and stop later cases after the first non-pass |
 | `push` | Prepared AgentSuite | Transfer exact OCI graph; optional full-passing receipt check; no deployment |
+| `lift` | Exact packaged native Orka AgentSuite | Deploy by immutable digest with explicit private evidence, target and inference; GET-only with `--plan` |
 | `create --live` | Runtime resources + PortableAgent bundle | Explicit legacy/live path |
 | `run`, `chat` | Existing live Orka Agent | One Task or interactive session; never workspace execution |
 | `status`, `orka status` | Orka installation | Table-only runtime report, not suite deployment status |
@@ -114,7 +117,7 @@ or deploy a runtime.
 
 | Runtime/integration | Implemented KMX scope |
 |---|---|
-| Orka | Default runtime; setup, live create, run/chat, workspace evaluation/evaluated publication, and legacy bundle lifecycle |
+| Orka | Default runtime; setup, live create, run/chat, workspace evaluation/evaluated publication, exact-digest native Lift, and legacy bundle lifecycle |
 | kagent v0.10.2 | Explicit live create and optional one-shot A2A only; KMX does not install it |
 | kagent v0.10.3 Go | Workspace authoring/ordinary publication; legacy bundle lift/status/evaluation; private unwired suite placement helpers |
 | agentsessions | Legacy bundle evaluation and zero-call reference replay only; no KMX deployment lifecycle |
@@ -167,7 +170,7 @@ Important limits:
 ## Compatibility and evidence
 
 - Latest stable v0.5.1 retains the former `kmx agent ...` routes. Root
-  create/eval/push and hidden bundle routes are unreleased development behavior.
+  create/eval/push/lift and hidden bundle routes are unreleased development behavior.
 - Help and completion must remain inert.
 - Unknown is not absent; readiness is not a result; a result is not evaluation.
 - Answers and report documents own stdout. Progress, warnings and notices use

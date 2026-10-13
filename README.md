@@ -25,9 +25,9 @@ enforcement.
 
 ## Create, Prove, Lift
 
-**Create → Prove → Lift** is the product direction. Current `main` implements
-Create, native Orka evaluation, and exact AgentSuite publication. Suite Lift by
-digest is not a public command yet.
+**Create → Prove → Lift** is implemented on current `main` for one-member native
+Orka suites. The commands remain unreleased; root Lift has hermetic command/apply
+coverage but is not currently qualified against a real cluster.
 
 > [!NOTE]
 > The table below describes the current development build, which is unreleased.
@@ -40,11 +40,12 @@ digest is not a public command yet.
 | **Create** | `kmx create NAME --workspace DIR --model MODEL --instructions FILE` authors one tool-free workspace member offline. It does not contact Kubernetes, build an image, or run a model. |
 | **Prove** | `kmx eval --workspace DIR --to-context CTX --inference provider:NAME --out RECEIPT` runs ordered native Orka cases once, stops later cases after the first non-pass, and writes private evidence only when all cases pass. |
 | **Publish** | `kmx push --workspace DIR --evaluation RECEIPT REF` checks that evidence against the exact OCI manifest and publishes that graph. Plain `kmx push REF` remains explicitly unevaluated. Neither form deploys. |
-| **Lift** | **Not implemented for AgentSuites on current `main`.** Internal exact-digest planning is read-only. Hidden `kmx bundle lift` is the separate legacy PortableAgent operation. |
+| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --inference provider:NAME --evidence RECEIPT` deploys the exact native Orka package without building, repacking, or publishing. `--plan` is GET-only; hidden `kmx bundle lift` remains the separate legacy PortableAgent operation. |
 
 Create and push discover the nearest ancestor `workspace.yaml`; `--workspace DIR`
 selects an exact root without fallback. Read the [workspace lifecycle](docs/suite-workspace.md)
-for identities, evidence privacy, and failure boundaries.
+for identities, evidence privacy, exact evaluated-subject reuse, absent-only
+source-evidence `--promote`, partial outcomes, and fresh-evaluation requirements.
 
 ## Get Your First Answer
 
@@ -77,7 +78,7 @@ context selection.
 
 | Path | What it means |
 |---|---|
-| Workspace | Default `kmx create`, root `eval`, and root `push` operate on editable AgentSuite workspace source. They do not run `kmx chat` or `kmx run`. |
+| Workspace | Default `kmx create`, root `eval`, and root `push` operate on editable source. Digest-based root `lift` does not consume workspace source; it uses the packaged artifact and separate private evidence with explicit target and inference inputs. Run/chat still target live Agents. |
 | Local environment | `kmx local up` prepares kind, model and runtime without creating an Agent. The experimental Go `AgentEnvironment` interface is setup-only and is not wired to this command yet. |
 | Live Agent | `kmx create --live` creates runtime resources and a PortableAgent bundle. `kmx run --agent NAME --prompt TEXT` performs one Task; `kmx chat NAME` opens an Orka session. |
 | Legacy bundle | Hidden but callable `kmx bundle ...` commands retain PortableAgent lift, status, evaluation, verification and retirement until suite-path parity. They are not AgentSuite commands. |
@@ -85,8 +86,8 @@ context selection.
 ## Runtime Boundaries
 
 - **Orka** is the default runtime and currently owns the complete workspace
-  evaluation/evaluated-publication path, live create, run, chat and legacy
-  bundle lifecycle.
+  evaluation/evaluated-publication/digest-lift path, live create, run, chat and
+  legacy bundle lifecycle.
 - **kagent** support is exact-version and operation-specific: v0.10.2 live
   create; v0.10.3 Go workspace authoring/publication and legacy bundle
   lift/status/evaluation. Public suite evaluation, lift and status are not
