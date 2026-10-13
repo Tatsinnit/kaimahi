@@ -75,7 +75,7 @@ Workspace --create/eval--> AgentSuite artifact --push--> OCI location
 | Command | Primary object | Current effect |
 |---|---|---|
 | `create` | Workspace | Author one offline member; no cluster or model call |
-| `eval` | Workspace/prepared AgentSuite | Place exact native Orka content, run cases in order, and stop later cases after the first non-pass |
+| `eval` | Workspace/prepared AgentSuite | Place exact packaged Orka or exact-v0.10.3 Go kagent content, run cases in order, and stop later cases after the first non-pass |
 | `push` | Prepared AgentSuite | Transfer exact OCI graph; optional full-passing receipt check; no deployment |
 | `lift` | Exact packaged native Orka AgentSuite | Deploy by immutable digest with explicit private evidence, target and inference; GET-only with `--plan` |
 | `create --live` | Runtime resources + PortableAgent bundle | Explicit legacy/live path |
@@ -94,8 +94,9 @@ one-member limit.
 is required for resource creation, previews, no-name wizard use, and exact
 kagent v0.10.2 live create. `--workspace` and `--live` conflict.
 
-Root `eval` is native Orka workspace execution, not legacy bundle evaluation.
-Kagent workspace evaluation and evaluated push refuse. Legacy bundle evaluation
+Root `eval` is packaged native workspace execution, not legacy bundle evaluation.
+Orka uses `--inference`; exact-v0.10.3 Go kagent uses `--bindings`. Both can
+produce runtime-specific evidence for evaluated push. Legacy bundle evaluation
 remains `kmx bundle evaluate` and can explicitly select exact kagent v0.10.3 Go
 or agentsessions within their qualified boundaries.
 
@@ -119,7 +120,7 @@ or deploy a runtime.
 |---|---|
 | Orka | Default runtime; setup, live create, run/chat, workspace evaluation/evaluated publication, exact-digest native Lift, and legacy bundle lifecycle |
 | kagent v0.10.2 | Explicit live create and optional one-shot A2A only; KMX does not install it |
-| kagent v0.10.3 Go | Workspace authoring/ordinary publication; legacy bundle lift/status/evaluation; private unwired suite placement helpers |
+| kagent v0.10.3 Go | Workspace authoring, packaged evaluation and evaluated publication; legacy bundle lift/status/evaluation; no suite Lift/status/gates |
 | agentsessions | Legacy bundle evaluation and zero-call reference replay only; no KMX deployment lifecycle |
 
 Support is operation- and version-specific. See the [runtime support

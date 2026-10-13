@@ -50,7 +50,9 @@ path**: it ends with a native Orka Agent answering a question. For guided
 custom authoring and a first answer, use the wizard described below.
 kmx does not install or upgrade kagent. Explicit exact-v0.10.2 create and
 exact-v0.10.3 declarative legacy bundle lift/status/evaluation require an operator-prepared
-installation; see [version-qualified placement](agent-lift.md#exact-v0103-declarative-bundle-placement).
+installation. The same exact-v0.10.3 Go runtime supports packaged workspace
+`eval --bindings FILE` and evaluated push; see [version-qualified
+placement](agent-lift.md#exact-v0103-declarative-bundle-placement).
 
 Choose a local cluster name you own and pin its context:
 
@@ -171,8 +173,9 @@ requires `--workspace DIR`, which selects/initializes that exact root without a
 prompt. Invalid nearest markers refuse without fallback. An existing one-member
 workspace refuses a second member without changing files; select a new root.
 See [workspace authoring, evaluation, publication and digest Lift](suite-workspace.md).
-Native Orka workspace evaluation is implemented on a separately prepared
-target. Standalone package evaluation remains unavailable; root
+Packaged workspace evaluation is implemented for native Orka with `--inference`
+and exact-v0.10.3 Go kagent with `--bindings`; matching full-passing evidence can
+authorize evaluated push. Standalone package evaluation remains unavailable; root
 `kmx lift REF@sha256:DIGEST` instead deploys an exact registry or local-layout
 native Orka package using a separate matching private evidence file, explicit
 target, and Ready `openai` inference Provider.
@@ -235,7 +238,7 @@ nodes and checks API/DNS. kmx supplies `KIND_EXPERIMENTAL_PROVIDER=podman` autom
 - `kmx local down` deletes the **whole local cluster
   and its data**, including any historical database. Export needed data first;
   see [Orka backup cautions](orka.md#preserve-the-charts-generated-snapshot-key).
-  For AKS use [lift teardown](aks.md#teardown), not kind down. Azure resources can
+  For AKS use [`kmx aks down`](aks.md#teardown), not kind down. Azure resources can
   remain billable after a failed operation; verify cleanup rather than assuming cancellation deleted them.
 
 Next: [CLI reference](kmx.md), [models and endpoints](models.md),

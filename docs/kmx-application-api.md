@@ -146,9 +146,10 @@ verified subset while an operation is incomplete, but a complete result cannot
 omit or duplicate a composition. The result also refuses suites requiring
 standalone ToolProvider images because that output class is not yet represented.
 
-The native-Orka suite profile declares `requiredImages: []` and can be authored,
-evaluated by the separate installed workspace CLI, and transferred without
-member images. That profile cannot reach this alpha `Build`/`Push` workflow.
+The native Orka and exact-v0.10.3 Go kagent suite profiles declare
+`requiredImages: []` and can be authored, evaluated by the separate installed
+workspace CLI, and transferred without member images. Those profiles cannot
+reach this alpha `Build`/`Push` workflow.
 Before this becomes the general suite workflow, completeness must be
 derived from an explicit execution profile's required artifacts, including zero
 images, rather than inferred from composition count alone.

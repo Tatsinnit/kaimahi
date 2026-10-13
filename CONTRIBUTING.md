@@ -33,10 +33,14 @@ targets preinstalled exact v0.10.3. Lift creates new Go declarative resources or
 reuses a complete matching UID-bound deployment; it does not adopt or update.
 Evaluation requires a complete matching saved placement, desired bindings and
 explicit `--to-context`; unsecure only, trusted-proxy refused before any send.
+Packaged exact-v0.10.3 Go workspaces separately use root `eval --bindings FILE`,
+export runtime-specific full-passing evidence and support evaluated push; suite
+lift/status/gates remain unavailable.
 Deployment receipts prove readiness, not execution success. Dedicated CI now
 continuously qualifies Go v0.10.3 plan/lift/repeat/status/conflicts, receipt-bound
-evaluation and a separate one-shot native A2A answer using a keyless model/MCP
-fixture. Python remains render-only; promotion gates are unsupported. Do not
+evaluation, packaged two-case workspace evaluation/evaluated push and a separate
+one-shot native A2A answer using a keyless model/MCP fixture. Python remains
+render-only; promotion gates are unsupported. Do not
 infer or add an installer, upgrade path, auto-detection, standalone chat/run,
 list/show, retirement, console, quickstart, `up`, or AKS payload from those
 capabilities. Preserve Orka defaults and v0.10.2 create; runtime choice remains
@@ -95,7 +99,7 @@ unused exceptions and unreadable or insufficient text coverage fail the gate.
 Conventional tests/testdata, source comments and historical releases are records,
 not current instructions. Runtime behavior remains the command tests' responsibility.
 
-The mutation harness checks 40 representative mutants across ten checkers,
+The mutation harness checks 41 representative mutants across ten checkers,
 not every failure mode. This bounded set keeps verification practical but
 intentionally drops some unique mutation coverage; checker self-tests and
 ordinary tree checks still run. Checkers run in parallel with a worker count
@@ -112,7 +116,8 @@ One Go module contains the root CLI (`cmd/kmx`, `internal/kmx`), the public
 AgentSuite format package (`agentsuite`), and the application interface
 (`pkg/kmx`). AgentSuite does not have a separate module or version pin; root
 `go test ./...` tests it alongside the CLI, including first-class Orka paths
-and bounded kagent v0.10.2 create/v0.10.3 Go bundle lift/status/evaluate.
+and bounded kagent v0.10.2 create/v0.10.3 Go bundle lift/status/evaluate plus
+packaged workspace evaluation/evaluated push.
 Plane commands, administration, the source module (including checked-in SQL),
 build helper, embedded assets and plane-only scripts/fixtures are removed.
 Historical source remains in Git history. This cleanup deletes no deployed
@@ -140,8 +145,10 @@ Build the final Go state first with `go build -o bin/kmx ./cmd/kmx`, then run
 `bash scripts/ci/kagent-lift.sh`. It audits complete ordered admission/create
 metadata, enforces specific exit-1 refusals and checks receipt-bound status.
 Native A2A execution is independently verified with exactly one MCP tool call,
-two model calls and one terminal answer, with no resend. Only the payload-free
-`qualification.json` survives under `${RUNNER_TEMP:-/tmp}/kmx-kagent-lift/`;
+two model calls and one terminal answer, with no resend. A separate packaged
+workspace phase runs two tool-free cases, self-diff and evaluated push with
+occupied/stale-evidence refusals. Only payload-free `qualification.json` and
+`suite-qualification.json` survive under `${RUNNER_TEMP:-/tmp}/kmx-kagent-lift/`;
 raw logs, manifests, credentials, prompts and answers are not artifacts.
 Qualifier diagnostics expose only whitelisted subphase and reason codes through
 saved shell stderr; bootstrap and tool output remain private.

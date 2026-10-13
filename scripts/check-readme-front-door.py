@@ -49,6 +49,7 @@ DEVELOPER_LINKS = [
     ("interface baseline", "[interface baseline](docs/interface-baseline.md)"),
     ("repository map", "[repository map](docs/repository-map.md)"),
 ]
+PATH_ROWS = ["Workspace", "Local environment", "Live Agent", "Legacy bundle"]
 
 
 def ordered_in(block: str, commands: list[tuple[str, str]]) -> str | None:
@@ -92,6 +93,27 @@ def journey_rows(section: str) -> tuple[list[tuple[str, str]], str | None]:
         first, second = (part.strip() for part in parts[1:3])
         rows.append((first.strip("* "), second))
     return rows, None
+
+
+def path_rows(section: str) -> dict[str, str]:
+    """Parse the exact workspace/live path table into its four named rows."""
+    lines = section.splitlines()
+    try:
+        start = lines.index("| Path | What it means |")
+    except ValueError:
+        return {}
+    if start + 1 >= len(lines) or lines[start + 1] != JOURNEY_SEPARATOR:
+        return {}
+    rows: dict[str, str] = {}
+    for line in lines[start + 2:]:
+        if not line.startswith("|"):
+            break
+        parts = line.split("|")
+        name = parts[1].strip() if len(parts) == 4 else ""
+        if len(parts) != 4 or name in rows:
+            return {}
+        rows[name] = parts[2].strip()
+    return rows
 
 
 def check(text: str) -> str | None:
@@ -144,10 +166,22 @@ def check(text: str) -> str | None:
     if missing is not None:
         return f"README front door: {missing} is missing from the first-answer commands"
 
+    paths = path_rows(section_after(text, matches["workspace/live heading"]))
+    if list(paths) != PATH_ROWS:
+        return "README front door: workspace/live paths must contain the exact four rows"
+    for label, required in {
+        "Workspace": ["`kmx create`", "root `eval`", "root `push`", "does not consume workspace source", "separate private evidence"],
+        "Local environment": ["`kmx local up`", "without creating an Agent", "setup-only", "not wired"],
+        "Live Agent": ["`kmx create --live`", "`kmx run --agent NAME --prompt TEXT`", "`kmx chat NAME`"],
+        "Legacy bundle": ["Hidden but callable", "PortableAgent", "They are not AgentSuite commands"],
+    }.items():
+        if any(marker not in paths[label] for marker in required):
+            return f"README front door: {label} path boundary is missing"
+
     runtime = section_after(text, matches["runtime boundaries heading"])
     for label, pattern in [
-        ("Orka default", r"\*\*Orka\*\* is the default runtime.*workspace\s+evaluation/evaluated-publication/digest-lift.*live create, run, chat.*legacy\s+bundle lifecycle"),
-        ("kagent version boundary", r"\*\*kagent\*\* support is exact-version.*v0\.10\.2 live\s+create; v0\.10\.3 Go workspace authoring/publication and legacy bundle\s+lift/status/evaluation\. Public suite evaluation, lift and status are not\s+available\."),
+        ("Orka default", r"\*\*Orka\*\* is the default runtime\..*packaged workspace path supports\s+evaluation/evaluated publication and the only root digest Lift;.*live\s+create, run, chat.*legacy bundle lifecycle"),
+        ("kagent version boundary", r"\*\*kagent\*\* support is exact-version.*v0\.10\.2 live\s+create; v0\.10\.3 Go packaged workspace authoring, `eval --bindings`, evaluated\s+publication, and legacy bundle lift/status/evaluation\. Suite Lift, status, and\s+gates are unavailable\."),
         ("agentsessions boundary", r"\*\*agentsessions\*\* is evaluation and replay integration for the legacy bundle\s+path, not a KMX deployment target\."),
     ]:
         if re.search(pattern, runtime, re.S) is None:

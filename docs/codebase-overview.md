@@ -110,9 +110,9 @@ workspace.Prepare
 
 kmx eval
   -> exact prepared suite
-  -> observed target, Provider/Secret and runtime
-  -> ownership-safe Provider/Agent placement
-  -> one fresh, never-retried Task per ordered case
+  -> observed target, runtime and runtime-specific model binding
+  -> Orka Provider/Agent or kagent ModelConfig/Agent placement
+  -> one fresh, never-retried Orka or blocking A2A Task per ordered case
   -> private receipt only after a full pass
 
 kmx push [--evaluation RECEIPT] REF
@@ -131,10 +131,10 @@ The public graph digest, authored-source fingerprint and OCI manifest digest are
 different identities. Publication uses the OCI manifest digest because it also
 binds supplemental native metadata and cases. Push never deploys.
 
-Native Orka workspace evaluation is implemented and continuously qualifies one
-fixed two-case scenario. Kagent v0.10.3 Go workspace authoring and ordinary
-publication are implemented, but kagent suite evaluation, lift and status are
-not.
+Native Orka workspace evaluation continuously qualifies one fixed two-case
+scenario. Exact-v0.10.3 Go kagent workspace evaluation, runtime-specific passing
+evidence, evaluated publication and same-runtime receipt comparison are also
+implemented and qualified. Kagent suite lift, status and gates are not.
 
 ### Native digest Lift
 
@@ -194,7 +194,8 @@ Required live shards prove bounded scenarios rather than universal support:
 - Orka runtime, Kubernetes Tool and the fixed native workspace qualifier;
 - stock Orka Helm integration;
 - clusterless agentsessions evaluation/replay and judge-client proof;
-- exact kagent v0.10.3 Go bundle lift/status/evaluation and native A2A.
+- exact kagent v0.10.3 Go bundle lift/status/evaluation, native A2A, and packaged
+  two-case workspace evaluation/evaluated publication.
 
 The `e2e-hello-world` job aggregates those shards. A green shard qualifies its
 fixed versions and scenario; it is not a production-readiness claim.

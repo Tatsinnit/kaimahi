@@ -974,7 +974,7 @@ func (m agentTUIModel) View() tea.View {
 	var body string
 	switch {
 	case m.form != nil:
-		lines := []string{"Create remote AKS environment", "", "Uses the current Azure account; the lift review shows the subscription.", "Creates a resource group, registry and AKS cluster, then continues legacy bundle lift.", ""}
+		lines := []string{"Create remote AKS environment", "", "Uses the current Azure account; the AKS setup review shows the subscription.", "Creates a resource group, registry and AKS cluster, then continues legacy bundle lift.", ""}
 		for i, label := range agentTUIFormLabels {
 			value := m.form[i]
 			if i == m.formStep {

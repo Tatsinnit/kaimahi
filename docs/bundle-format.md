@@ -13,7 +13,7 @@ These inputs are not interchangeable:
 
 | Format | Files / example | Use it with |
 |---|---|---|
-| Editable workspace source | `workspace.yaml`, `agents/ID/member.yaml`, instructions, build profile and `eval/*.yaml`, created by default `kmx create` | Root `kmx eval` for native Orka and root `kmx push [--evaluation FILE] REF` for exact OCI publication. It is not an `agent.yaml` bundle, and run/chat or legacy bundle commands do not consume it. |
+| Editable workspace source | `workspace.yaml`, `agents/ID/member.yaml`, instructions, build profile and `eval/*.yaml`, created by default `kmx create` | Root `kmx eval` for packaged native Orka or exact-v0.10.3 Go kagent and root `kmx push [--evaluation FILE] REF` for exact OCI publication. It is not an `agent.yaml` bundle, and run/chat or legacy bundle commands do not consume it. |
 | Legacy PortableAgent YAML bundle | `agents/my-agent/agent.yaml`, `bindings.yaml` and `eval/*.yaml`, created by `kmx create --live` | Hidden `kmx bundle lift/status/evaluate/retire`. The [CI eval action](agent-lift.md#run-evals-in-ci) takes this bundle directory, not a workspace or image. Runtime-specific limits still apply. |
 | Agentsessions evaluation receipt | Private payload-free JSON written by `kmx bundle evaluate --sessions ...` | `kmx bundle verify RECEIPT --sessions HOST` reconstructs reference evidence without another model call. It does not read a bundle directory or verify judge outcomes. |
 | Extracted AgentSuite definition | `agentsuite.json` and referenced JSON manifests, such as the tool-free incident-analyst fixture | `kmx suite validate DIRECTORY`, `kmx suite diff LEFT RIGHT`, `kmx suite push DIRECTORY REFERENCE`, and `kmx suite pull REFERENCE --output DIRECTORY`. Root `kmx push` is workspace-aware and takes only a destination reference. Use incident-analyst for the [experimental build example](kmx.md#experimental-agentsuite-image-build). |
@@ -182,9 +182,11 @@ schema version. Existing non-judge typed receipts remain readable. Both current
 production evaluation paths always mark tool assertions unknown, including negative assertions with empty or present journals; parser
 support is not runtime tool capability.
 
-New evaluation receipts are v2; deployment receipts and remembered selections
-remain unversioned. Agentsessions versions its limited host identity separately
-from the receipt schema. V2 writers archive each run once in private
+Legacy bundle evaluation receipts are v2; private root workspace evidence instead
+uses `domain: kmx.native-suite.passing/v1` with `schemaVersion: 1` and distinct
+Orka/kagent branches. Deployment receipts and remembered selections remain
+unversioned. Agentsessions versions its limited host identity separately from
+the receipt schema. Legacy v2 writers archive each run once in private
 `receipts/runs/eval-<runID>.json` and then update the unchanged latest
 `receipts/eval-<key>.json` filename. Archives never participate in lift-gate or
 status selection. No prompts, answers, assertion operands (including rubric),

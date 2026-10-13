@@ -22,6 +22,15 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
 
 ## Unreleased
 
+- Packaged tool-free kagent v0.10.3 Go/linux-amd64 workspaces now evaluate
+  through root `eval --bindings FILE`: one fresh blocking A2A Task per ordered
+  case, unsecure auth only, no retries, answer output or bundle conversion.
+  Strict full-passing suite evidence has a separate typed kagent branch;
+  evaluated push requires exact manifest S and the same packaged runtime.
+  Offline suite receipt diff refuses mixed runtimes. Existing Orka receipt
+  serialization, evaluation and lift remain compatible; kagent suite lift is
+  not enabled. Unsupported judge/tool assertions still refuse offline.
+
 ### Added
 
 - Deploy-only `kmx lift <ref>@<digest>` from a registry or local `--from-layout`.
@@ -59,8 +68,8 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
   metadata and the exact OCI manifest; publication copies that prepared graph
   without images or cluster effects. Invalid/unsupported runtime declarations
   refuse; Orka-only preparation/evidence consumers do not execute kagent input.
-  CLI/release-lift kagent placement, suite evaluation/gates and RemoteMCP
-  remain future slices.
+  Release-lift kagent dispatch/gates and RemoteMCP remain future slices; packaged
+  kagent evaluation/evaluated push are described above.
   Existing live kagent v0.10.2 create is unchanged.
   [Offline native workspace profiles](docs/suite-workspace.md).
 
@@ -139,6 +148,12 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
   upstream projection coupling remains unfixed.
 
 ### Fixed
+
+- Same-subject native release lift reuses its freshly compared input snapshot
+  within each recheck instead of inspecting the same inputs twice. Every
+  pre-write boundary and final placement verification still reads the API;
+  promotion retains its extra post-gate inspection. Installed schema reads now
+  precede the live input snapshot. No gate, timeout or retry policy changes.
 
 - Quickstart checks current-generation Agent readiness when reconnecting to an
   existing Agent whose Kubernetes tool reference needs no change. A stale or
@@ -265,7 +280,8 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
   | `kmx suite push REF` | `kmx push REF` |
 
   Bare `kmx agent` and `kmx agent eval` no longer exist. Workspace `kmx eval`
-  requires `--to-context`, `--inference` and `--out`; use `kmx eval --help` for
+  requires `--to-context`, `--out`, and exactly one runtime-derived selector:
+  Orka `--inference` or packaged kagent `--bindings`; use `kmx eval --help` for
   help and evaluation helpers. The hidden editor retirement stub is also removed with its parent;
   edit live Orka resources with `kubectl --context <ctx> -n <ns> edit agents.core.orka.ai <name>`.
   Task retrieval remains `kmx task result`; no root `result` is added.

@@ -1,6 +1,6 @@
 # Suite-first lifecycle: objects and everyday commands
 
-**Status:** Direction, partly implemented; discussed in [#328](https://github.com/kaimahi-agents/kaimahi/issues/328). Current `main` implements one-member workspace authoring, native Orka evaluation, exact OCI publication, suite diff, bounded native CI qualification, private kagent package/placement helpers, and deploy-only native Orka Lift by digest. Suite deployment status, workspace run/chat, operational kagent suite Lift and general image-backed placement are not implemented. Open questions below are owned by the linked issues.
+**Status:** Direction, partly implemented; discussed in [#328](https://github.com/kaimahi-agents/kaimahi/issues/328). Current `main` implements one-member workspace authoring, packaged Orka/exact-v0.10.3 Go kagent evaluation and evaluated publication, suite diff, bounded native CI qualification, and deploy-only native Orka Lift by digest. Suite deployment status, workspace run/chat, operational kagent suite Lift and general image-backed placement are not implemented. Open questions below are owned by the linked issues.
 
 ## Direction
 
@@ -20,7 +20,7 @@ These are distinct objects, not interchangeable names for one directory. “Rele
 | Release artifact | AgentSuite OCI manifest digest plus an immutable association to every required member image digest; native profiles currently require no member images, while general release association remains open | Current workspace preparation produces the exact native OCI artifact; general release assembly remains future | No | KMX private local layout, portable layout or registry |
 | Published release | The same artifact and image identities, with retrieval references; a tag is a mutable locator, not identity | Current root `push` | Content no; tags/locations yes | OCI registry or local OCI layout |
 | Target-bound placement | Exact artifact, runtime, target and target/inference binding observations; durable aggregate deployment identity is open | Root `lift` places one-member native Orka packages with guarded create/exact reuse | Live state yes; changed packaged identity requires new evidence, while explicit promotion requires an eligible destination with both suite-owned resources absent | Runtime resources and ownership markers; the opaque successful placement remains in process, with no aggregate deployment record |
-| Evaluation evidence | Evaluation run ID and immutable subject/case-set identities, with per-case outcomes and execution references | Current root `eval` for native Orka; only a full pass exports a private receipt | Completed evidence no; another run creates new evidence | Private evidence file; distributable attestations remain future |
+| Evaluation evidence | Evaluation run ID and immutable subject/case-set identities, with per-case outcomes and execution references | Current root `eval` for packaged Orka or exact-v0.10.3 Go kagent; only a full pass exports runtime-specific private evidence | Completed evidence no; another run creates new evidence | Private evidence file; distributable attestations remain future |
 
 The [AgentSuite specification](../agentsuite/spec.md) distinguishes canonical graph identity from OCI manifest identity. Neither is an image digest. Packaging and registry relocation must not be confused with source edits. A Kubernetes context supplies access; durable target identity is not its name. A deployment is placement or registration; a run is a Task, Session or equivalent invocation, not another deployment.
 
@@ -89,7 +89,7 @@ same Orka runtime report.
 
 | Current path | Relationship to the direction |
 |---|---|
-| Root `create`, `eval`, `push` | Implemented suite workspace authoring, native Orka proof and exact publication. |
+| Root `create`, `eval`, `push` | Implemented suite workspace authoring, packaged Orka/kagent proof and exact ordinary or evaluated publication. |
 | Root `lift REF@sha256:DIGEST` | Implemented deploy-only one-member native Orka placement with mandatory private evidence; not currently real-cluster qualified. |
 | Root `chat`, `run`; `create --live` | Still target live Orka resources and PortableAgent artifacts, not workspace-local execution. |
 | Hidden `bundle evaluate/lift/retire/status/verify` | Legacy lifecycle retained until suite-path parity; its receipts are not suite evidence. |
@@ -144,7 +144,9 @@ Removal has not happened yet and waits for parity on the suite path, in order:
 
 1. Native Orka create, eval, push and deploy-only lift by digest are implemented (#430); aggregate status, retirement and member execution remain open.
 2. Root Lift requires exact private suite evidence; distributable authenticated policy and broader promotion semantics remain open.
-3. kagent as a suite target, replacing kagent bundle create, lift, status and evaluation. kagent remote MCP tools are not a precondition: they may be unavailable for a while and return on the suite path.
+3. Kagent packaged evaluation/evaluated publication are implemented; suite lift,
+   status and the remaining legacy-bundle replacement are open. Remote MCP tools
+   are not a precondition: they may be unavailable for a while and return later.
 4. Quickstart, console and interactive lift through create → lift, so `create --live` can go.
 
 Then one deliberate breaking change deletes the `bundle` commands, bundle receipts and their code. Old receipts stop being readable; no new bundle-only features land in the meantime.

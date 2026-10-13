@@ -85,13 +85,13 @@ context selection.
 
 ## Runtime Boundaries
 
-- **Orka** is the default runtime and currently owns the complete workspace
-  evaluation/evaluated-publication/digest-lift path, live create, run, chat and
-  legacy bundle lifecycle.
+- **Orka** is the default runtime. Its packaged workspace path supports
+  evaluation/evaluated publication and the only root digest Lift; it also owns
+  live create, run, chat and the legacy bundle lifecycle.
 - **kagent** support is exact-version and operation-specific: v0.10.2 live
-  create; v0.10.3 Go workspace authoring/publication and legacy bundle
-  lift/status/evaluation. Public suite evaluation, lift and status are not
-  available.
+  create; v0.10.3 Go packaged workspace authoring, `eval --bindings`, evaluated
+  publication, and legacy bundle lift/status/evaluation. Suite Lift, status, and
+  gates are unavailable.
 - **agentsessions** is evaluation and replay integration for the legacy bundle
   path, not a KMX deployment target.
 

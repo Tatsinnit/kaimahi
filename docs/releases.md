@@ -205,11 +205,12 @@ helpers. Root `status` remains the table-only Orka runtime report, also availabl
 as `orka status`.
 
 Current main also adds the unreleased workspace path: default `create <name>`
-authors one native workspace member offline, root `eval` runs authored native
-Orka cases in order against a separately prepared target and stops later cases
-after the first non-pass, and root `push
-[--workspace DIR] REF` publishes the exact prepared OCI graph. `push
---evaluation FILE` requires full-passing evidence for that exact manifest.
+authors one native workspace member offline. Root `eval` derives the packaged
+runtime, using `--inference` for Orka or `--bindings` for exact-v0.10.3 Go
+kagent, and stops later cases after the first non-pass. Root `push
+[--workspace DIR] REF` publishes the exact prepared OCI graph; `push
+--evaluation FILE` requires matching runtime-specific full-passing evidence for
+that exact manifest.
 Root `lift REF@sha256:DIGEST` deploys that native Orka package from a registry or
 local layout with explicit private full-passing evidence, target and Ready
 `openai` inference Provider; `--plan` is GET-only. Standalone package-reference evaluation

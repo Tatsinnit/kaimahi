@@ -11,6 +11,12 @@
       "replace": "    (\"runtime boundaries heading\", r\"\"),"
     },
     {
+      "name": "the workspace and live split is skipped",
+      "breaks": "Workspace source, environment setup, live agents and legacy bundles may be conflated.",
+      "find": "    paths = path_rows(section_after(text, matches[\"workspace/live heading\"]))",
+      "replace": "    return None\n    paths = path_rows(section_after(text, matches[\"workspace/live heading\"]))"
+    },
+    {
       "name": "the Homebrew install is optional",
       "breaks": "An empty list validates any installation block.",
       "find": "INSTALL_COMMANDS = [\n",
