@@ -27,8 +27,8 @@ enforcement.
 
 **Create → Prove → Lift** is implemented on current `main` for one-member native
 Orka and exact-v0.10.3 Go kagent suites. The commands remain unreleased. Bounded
-CI qualifies Orka exact reuse and kagent fresh-target creation; it does not prove
-every promotion, creation or partial-outcome path.
+CI qualifies root Lift for Orka exact reuse and kagent fresh-target creation; root
+Lift qualification does not prove every promotion, creation or partial-outcome path.
 
 > [!NOTE]
 > The table below describes the current development build, which is unreleased.

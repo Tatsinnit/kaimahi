@@ -154,9 +154,12 @@ def check(text: str) -> str | None:
         return "README front door: Lift row must preserve the GET-only plan boundary"
     if "Orka `--inference provider:NAME` or kagent `--bindings FILE`" not in rows[3][1]:
         return "README front door: Lift row must preserve runtime-specific bindings"
-    if "qualifies Orka exact reuse and kagent fresh-target creation" not in journey:
+    if "kagent refuses occupied targets" not in rows[3][1]:
+        return "README front door: Lift row must preserve kagent create-only placement"
+    normalized_journey = " ".join(journey.split())
+    if "qualifies root Lift for Orka exact reuse and kagent fresh-target creation" not in normalized_journey:
         return "README front door: Lift qualification scope is missing"
-    if "does not prove every promotion, creation or partial-outcome path" not in journey:
+    if "root Lift qualification does not prove every promotion, creation or partial-outcome path" not in normalized_journey:
         return "README front door: Lift qualification limits are missing"
 
     answer = section_after(text, matches["first-answer heading"])

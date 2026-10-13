@@ -26,7 +26,7 @@ JOURNEY = WARNING + """| Stage | Current development build |
 | **Create** | `kmx create NAME --workspace DIR` authors source. |
 | **Prove** | `kmx eval --workspace DIR` stops later cases after the first non-pass and writes evidence only when all cases pass. |
 | **Publish** | `kmx push --workspace DIR --evaluation RECEIPT REF` copies the suite. Plain `kmx push REF` remains explicitly unevaluated. Neither form deploys. |
-| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --evidence RECEIPT` plus Orka `--inference provider:NAME` or kagent `--bindings FILE` deploys without building, repacking, or publishing. `--plan` is GET-only; legacy bundle lift is separate. |
+| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --evidence RECEIPT` plus Orka `--inference provider:NAME` or kagent `--bindings FILE` deploys without building, repacking, or publishing. `--plan` is GET-only; kagent refuses occupied targets; legacy bundle lift is separate. |
 """
 GOOD = """<img src="brand/ketu.svg" alt="Kaimahi ketu mark">
 **Agent Builder CLI for Kubernetes.**
@@ -34,7 +34,7 @@ GOOD = """<img src="brand/ketu.svg" alt="Kaimahi ketu mark">
 [![Release](https://img.shields.io/github/v/release/kaimahi-agents/kaimahi)](https://github.com/kaimahi-agents/kaimahi/releases)
 [![License](https://img.shields.io/github/license/kaimahi-agents/kaimahi)](LICENSE)
 ## Create, Prove, Lift
-Bounded CI qualifies Orka exact reuse and kagent fresh-target creation; it does not prove every promotion, creation or partial-outcome path.
+Bounded CI qualifies root Lift for Orka exact reuse and kagent fresh-target creation; root Lift qualification does not prove every promotion, creation or partial-outcome path.
 """ + JOURNEY + """## Getting Starter: Get Your First Answer
 ```bash
 """ + INSTALL + """```
@@ -107,9 +107,10 @@ CASES += [
     ("lift builds", GOOD.replace("without building, repacking, or publishing", "after rebuilding and publishing"), "Lift row must stay deploy-only"),
     ("lift plan writes", GOOD.replace("`--plan` is GET-only", "`--plan` applies resources"), "Lift row must preserve the GET-only plan boundary"),
     ("lift runtime binding missing", GOOD.replace(" or kagent `--bindings FILE`", ""), "Lift row must preserve runtime-specific bindings"),
-    ("lift qualification missing", GOOD.replace("qualifies Orka exact reuse and kagent fresh-target creation", "has tests"), "Lift qualification scope is missing"),
-    ("lift qualification broadened", GOOD.replace("does not prove every promotion, creation or partial-outcome path", "proves every path"), "Lift qualification limits are missing"),
-    ("late release warning", GOOD.replace(WARNING, "").replace("| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --evidence RECEIPT` plus Orka `--inference provider:NAME` or kagent `--bindings FILE` deploys without building, repacking, or publishing. `--plan` is GET-only; legacy bundle lift is separate. |", "| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --evidence RECEIPT` plus Orka `--inference provider:NAME` or kagent `--bindings FILE` deploys without building, repacking, or publishing. `--plan` is GET-only; legacy bundle lift is separate. |\n" + WARNING.rstrip()), "release/main warning must precede"),
+    ("kagent occupied reuse claimed", GOOD.replace("kagent refuses occupied targets", "kagent reuses occupied targets"), "Lift row must preserve kagent create-only placement"),
+    ("lift qualification missing", GOOD.replace("qualifies root Lift for Orka exact reuse and kagent fresh-target creation", "has tests"), "Lift qualification scope is missing"),
+    ("lift qualification broadened", GOOD.replace("root Lift qualification does not prove every promotion, creation or partial-outcome path", "root Lift proves every path"), "Lift qualification limits are missing"),
+    ("late release warning", GOOD.replace(WARNING, "").replace("| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --evidence RECEIPT` plus Orka `--inference provider:NAME` or kagent `--bindings FILE` deploys without building, repacking, or publishing. `--plan` is GET-only; kagent refuses occupied targets; legacy bundle lift is separate. |", "| **Lift** | `kmx lift REF@sha256:DIGEST --to-context CTX --evidence RECEIPT` plus Orka `--inference provider:NAME` or kagent `--bindings FILE` deploys without building, repacking, or publishing. `--plan` is GET-only; kagent refuses occupied targets; legacy bundle lift is separate. |\n" + WARNING.rstrip()), "release/main warning must precede"),
     ("stable table label", GOOD.replace("| Stage | Current development build |", "| Stage | Latest stable release |"), "exact two-column header"),
     ("malformed table separator", GOOD.replace("|---|---|", "|---|"), "separator is missing or malformed"),
     ("extra suite row", GOOD.replace("| **Lift** |", "| **Inspect** | Future status. |\n| **Lift** |"), "exactly four rows"),
@@ -117,7 +118,7 @@ CASES += [
     ("generic legacy guide", GOOD.replace("Legacy PortableAgent bundle lifecycle", "Lift operation guide"), "agent-lift links must be labeled"),
     ("Orka suite support broadened", GOOD.replace("packaged workspace path supports evaluation, evaluated publication and root digest Lift with exact evaluated reuse", "owns every suite operation"), "Orka default is missing"),
     ("wrong kagent version", GOOD.replace("v0.10.3 Go", "v1.0 Python"), "kagent version boundary is missing"),
-    ("kagent suite evaluation removed", GOOD.replace("`eval --bindings`, evaluated publication, and ", ""), "kagent version boundary is missing"),
+    ("kagent suite evaluation removed", GOOD.replace("`eval --bindings`, evaluated publication, ", ""), "kagent version boundary is missing"),
     ("kagent digest lift removed", GOOD.replace("create-only root digest Lift, and ", ""), "kagent version boundary is missing"),
     ("kagent status claimed", GOOD.replace("Packaged status and retirement are unavailable.", "Packaged status is available."), "kagent version boundary is missing"),
     ("agentsessions deployment claimed", GOOD.replace("not a KMX deployment target", "a KMX deployment target"), "agentsessions boundary is missing"),
