@@ -128,11 +128,21 @@ placement and one fresh Task per ordered case. Orka requires
 author-owned `--bindings FILE`, unsecure auth and no `--result-port`. Only full
 passing metadata is exported once to a private file outside workspace/cache;
 failure, unknown, drift, cancellation or output error stops later sends. No
-package reference, subset, judge or content output is accepted.
+package reference, subset or content output is accepted. Authored `llmJudge`
+requires explicit `--judge-base-url`, optional `--judge-key-env` and authored
+model/version/threshold. Two independent samples must agree on the threshold
+side; errors/splits stay unknown. Judgment shares the case deadline and is
+followed by attribution rechecks. Passing rows bind judge identity, endpoint
+configuration hash and both scores without reasoning or raw judge URLs; recovery
+commands omit the endpoint. Text-only receipt encoding is unchanged. Development
+AgentSessions continues to refuse judges.
 `push --evaluation FILE` checks runtime-specific private receipt coherence and
 exact manifest S before publication; ordinary push is unevaluated. Receipts are
 unsigned observations, not policy gates. Dedicated shards qualify bounded Orka
-and kagent two-case workspace scenarios; this is not general runtime support.
+and kagent workspace scenarios; the native Orka inventory includes two text cases
+and one open-ended rubric case sharing the pinned AIKit workload, with no timeout
+increase. Kagent retains its two text cases. Hermetic runner tests are not live
+judge proof; this is not general runtime support.
 Root `lift REF@sha256:DIGEST` consumes that explicit private full-pass evidence
 for source-free, deploy-only packaged Orka or exact-kagent placement. Bounded
 qualification covers Orka exact reuse and kagent fresh-target creation, not every

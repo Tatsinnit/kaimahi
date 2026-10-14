@@ -20,7 +20,7 @@ refuses, even with matching evaluated UIDs. Suite status and retirement remain
 unavailable. Evaluation placement refuses occupied targets without a complete
 caller-retained observation; qualified repeat is read-only, not update/adoption
 or restart recovery.
-Orka evaluation has hermetic command/Task tests and a pinned two-case native
+Orka evaluation has hermetic command/Task tests and a pinned three-case native
 workspace CI qualifier. Packaged kagent evaluation has hermetic coverage and
 pinned exact-v0.10.3 CLI qualification. Root exact-digest Lift retrieves the
 package from a registry or local layout and separately consumes matching private
@@ -321,10 +321,46 @@ kagent instead requires `--bindings FILE`, never both. For Orka, namespace
 is `orka-system` by default (`--to-namespace`); `--result-port` defaults to
 `19180`, and each case has a separate `--case-timeout` (default 5m, maximum 9m).
 Explicit empty selectors and global `--context` are refused. No runtime/model
-substitution, judge, case subset or `--show-content` is available. Only `contains`,
-`notContains` and `regex` assertions are supported. Unsupported evaluators,
+substitution, case subset or `--show-content` is available. Orka/kagent support
+`contains`, `notContains`, `regex` and explicitly configured `llmJudge` assertions. Unsupported evaluators,
 receipt-budget overflow and invalid output destinations refuse offline before
 loading cluster configuration.
+
+For an open-ended answer, author a judge assertion in the ordinary case file:
+
+```yaml
+id: explanation
+input: Explain why the sky appears blue.
+assertions:
+  - id: quality
+    type: llmJudge
+    rubric: Explain scattering of sunlight without claiming the sky emits blue light.
+    minScore: 70
+    judgeModel: my-judge-model
+    judgeVersion: pinned-v1
+```
+
+Select an explicit OpenAI-compatible endpoint with `--judge-base-url` and,
+optionally, nominate its HTTPS credential environment variable with
+`--judge-key-env`. There is no endpoint or agent-model fallback. HTTPS is required
+except keyless HTTP at literal loopback. Input, attributed answer and rubric go
+to that provider. Preflight states the cost: **two independent temperature-zero
+requests per judge assertion**, sharing the existing per-case deadline. Both
+scores at/above the threshold pass, both below fail, and disagreement, malformed
+or unavailable responses are unknown. There are no retries or extra candidate
+Tasks. Native attribution is checked again after judging; late drift/deadline
+prevents a case pass and export. Reasoning is discarded, never printed.
+
+Passing receipt rows retain the authored model/version, threshold, policy digest,
+both scores and a configuration hash binding the canonical endpoint. Raw judge
+URLs are omitted from receipts and refusal recovery commands; supply the endpoint
+again when retrying. This is user-declared identity, not provider attestation.
+Changed authored identity invalidates exact-suite evidence; changed endpoint-bound
+identity makes receipt comparisons incompatible. Offline push/lift do not select
+or contact a current judge endpoint. Text-only receipt encoding stays unchanged;
+upgrade receipt readers before exchanging judge receipts. AgentSessions
+`--development-host` continues to refuse judges. The assertion fields are unchanged
+and can map directly to authored JSON cases; this does not migrate the case tree.
 
 One mutation guard covers runtime-specific placement and all ordered evaluation
 Tasks: Orka `Provider/Agent`, or kagent `ModelConfig/Agent`. Remote targets require
@@ -370,7 +406,8 @@ new private receipt file (0600) into an existing private directory (0700), outsi
 workspace and cache trees. Existing destinations are never replaced. A late
 publication or summary failure can leave a complete output file; inspect it rather
 than assuming failure removed it. Receipts contain identities, digests and
-assertion verdicts only, not payloads or evaluation history.
+assertion verdicts and bounded judge identity/scores only, not payloads or
+evaluation history.
 
 `push --evaluation FILE` reads that strict private file and requires the exact
 prepared manifest digest plus full offline case/subject coherence before transfer
@@ -657,7 +694,8 @@ placement, and triggers no cleanup or retry. Public result JSON is not restart
 or reuse authority. Kagent suite status/retirement and authenticated promotion
 policy remain unavailable; evidence never crosses runtimes.
 
-The existing pinned kind shard exercises create, two-case evaluation, exact local
+The existing pinned kind shard configures create, three-case evaluation (two text
+cases and an open-ended rubric case), exact local
 publication, source-free GET-only lift planning, explicit new-target promotion and
 occupied repeat refusal, with zero additional native execution traffic.
 

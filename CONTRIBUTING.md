@@ -42,7 +42,9 @@ bundle Sessions evaluation/replay: one fresh Session/config/Exec per ordered
 case, full-pass private proof and exact-S evaluated push, no cluster settings,
 tools/judge, auth, Lift/chat/status or remote lifecycle. Receipt diff refuses
 AgentSessions proof. Runtime-core assertions/llmJudge and all their test groups
-remain retained; do not add new native judge wiring. Exact model and
+remain retained; native Orka/kagent root eval supports authored llmJudge with an
+explicit endpoint, two threshold-side samples and payload-free declared identity
+proof. AgentSessions judging remains refused. Exact model and
 file-valued instructions are required; create/push share workspace discovery.
 No runtime/model bootstrap belongs in workspace create.
 
@@ -190,8 +192,14 @@ result hashes, exact registry/local-layout transfer, source-withheld root CLI
 exact reuse, existing evaluation Task result reads and no-effect refusal audits gate its
 metadata artifacts. Only `artifacts/passing.json` and scalar
 `artifacts/qualification.json` are uploaded on success; raw captures are private.
-Existing cluster deletion owns all runtime/model cleanup. A successful run
-qualifies this fixed two-case native workspace, exact-reuse Lift and bounded
+Existing cluster deletion owns all runtime/model cleanup. The native-only
+inventory has two text cases plus one open-ended rubric case, with exactly two
+judge samples from the same pinned AIKit workload over an owned keyless loopback
+forward. Independent receipt checks bind declared model/version, policy, threshold,
+endpoint configuration digest and both scores; they do not attest model identity.
+No job, case or subprocess timeout is increased. The existing 660s outer limit
+bounds three sequential cases; it does not allow three full 5m waits. A successful
+run qualifies this fixed three-case native workspace, exact-reuse Lift and bounded
 registry promotion into an absent pair on a second exclusively owned kind cluster.
 The destination has its own Provider/Secret in orka-system, sharing the same
 source AIKit workload through a fixture-only private-network NodePort, never a

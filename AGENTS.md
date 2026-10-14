@@ -100,6 +100,13 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md), the
   extracted-directory transfer and alpha `pkg/kmx` interfaces. PortableAgent typed
   scaffolding used by native preparation is not a persistent old reader.
   Native suite-owned resources refuse legacy invocation/adoption/copying.
+  Private packaged-native preparation and ownership-safe placement feed full-workspace
+  evaluation. The existing Orka CI shard configures three cases against the pinned
+  runtime/model: two text cases and one open-ended llmJudge case using the same
+  AIKit workload through an owned keyless loopback forward. Private metadata
+  independently checks judge identity/configuration and both scores. Job/case/outer
+  timeouts are unchanged; the 660s outer budget bounds three sequential cases,
+  not three complete 5m waits. Hermetic runner tests alone are not live judge proof.
   Internal PrepareReleaseLift plans an exact digest from a registry or read-only
   OCI layout, with bounded ingestion before validation and no source fingerprint.
   It requires explicit private full-passing native evidence, default exact observed
@@ -151,15 +158,24 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md), the
   flags and a nonpersistent operational hook. Unsupported/budget/output checks
   run before config; one fresh outer guard covers pair placement and all Tasks.
   Fail/unknown/drift/cancel/output errors stop later sends with no partial export.
-  No model/runtime override, judge/subset/content mode or standalone package
-  reference is accepted. Offline `eval diff` reads strict full-passing native Orka/kagent suite
+  No model/runtime override, subset/content mode or standalone package
+  reference is accepted. Authored llmJudge is supported for Orka/kagent with
+  explicit --judge-base-url and optional --judge-key-env (environment name only).
+  Two independent temperature-zero scores must agree on the threshold side;
+  unavailable/malformed/split results stay unknown. Judgment shares the existing
+  case deadline and attribution is rechecked afterward. Root eval discards
+  reasoning and omits judge endpoints from recovery commands. Private passing
+  rows bind authored model/version, threshold, policy, endpoint configuration hash
+  and both scores. Text-only receipt wire shape is unchanged; older readers
+  refuse judge rows. AgentSessions still refuses judges.
+  Offline `eval diff` reads strict full-passing native Orka/kagent suite
   evidence only. Old normalized receipts are unreadable. `eval from-sessions`
   remains independent private reference extraction/export; RecordedExecution,
   legacy bundle replay/evaluation/judge wiring and their consumers are removed, with no native
   manifest consumer. Preserve private filesystem/current identity ResourceVersion
   and Secret metadata bracketing. Hermetic tests are not live qualification.
   Runtime-core assertions and llmJudge remain retained with their test groups;
-  native profiles do not wire a judge or enable recorded candidate execution.
+  native judge wiring does not enable recorded candidate execution.
   The checkout-only native qualifier runs in the existing exclusively owned
   Orka shard, after legacy model proof, with private captures and metadata-only
   artifacts. Its second exclusively owned kind cluster has one pinned Orka in
