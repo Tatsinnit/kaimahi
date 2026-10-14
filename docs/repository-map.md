@@ -275,8 +275,14 @@ AIKit workload in that exclusively owned cluster and installs the
 readback, hash, intent/completion audit, refusal and privacy checks. A successful
 scenario qualifies the fixed two-case workspace path, exact registry/local root
 CLI lift reuse with source withheld, separate fresh answer Tasks and no-effect
-lift refusals against the pinned model/runtime. It does not qualify promotion,
-absent-resource CLI creation or partial outcomes. Passing artifacts contain only
+lift refusals against the pinned model/runtime. It also qualifies registry
+promotion into an absent pair on a second exclusively owned kind cluster, with
+GET-only planning, ordered admission/creation, independent readback, one fresh
+Task and no-effect model-mismatch refusal. Both pinned Orka installations use
+orka-system; destination inference has its own Provider/Secret and shares the
+source model through a fixture-only private-network NodePort with no host mapping.
+Source evidence remains distinct from destination evaluation. Partial outcomes
+are not qualified. Passing artifacts contain only
 private receipt metadata and payload-free qualification evidence. Existing cluster deletion
 owns runtime/model cleanup. These files are checkout-only scaffolding, not an
 installer or new CLI/API capability.
@@ -320,7 +326,7 @@ and intentionally has no hero image.
 | `embed.go` | **Packaging** | Root-module native manifest and helper embed declarations. |
 | `embed_test.go` | **Scaffolding** | Verifies every embedded asset is readable. |
 | `Makefile` | **Scaffolding** | Native build/check targets, context guard and AKS-credential helper. |
-| `.github/workflows/ci.yml`, `release.yml` | **Scaffolding** | Verification gates and tag-driven CLI releases. CI retains the five existing native e2e shards plus dedicated Go kagent bundle-lift, packaged-workspace evaluation/digest-Lift qualification, bounded Orka exact-reuse Lift qualification, their aggregator and native clone-free proof; no plane module or service job remains. Exact-v0.10.2 Kagent charts are external test preconditions that KMX does not install. Clone-free proves installation, full native local setup and an Orka Agent/Task answer. |
+| `.github/workflows/ci.yml`, `release.yml` | **Scaffolding** | Verification gates and tag-driven CLI releases. CI retains the five existing native e2e shards plus dedicated Go kagent bundle-lift, packaged-workspace evaluation/digest-Lift qualification, bounded Orka exact-reuse/promotion Lift qualification, their aggregator and native clone-free proof; no plane module or service job remains. Exact-v0.10.2 Kagent charts are external test preconditions that KMX does not install. Clone-free proves installation, full native local setup and an Orka Agent/Task answer. |
 | `.goreleaser.yaml` | **Scaffolding** | GoReleaser config the release workflow builds and renders the Homebrew formula with; publishing reuses that checked artifact set and never pushes the formula to the tap (`skip_upload: true`). |
 | `.github/actions/classify-change/` | **Scaffolding** | Classifies docs-only, scripts and kagent/shared qualification paths for CI. |
 | `.github/actions/kmx-eval/` | **Checkout tooling** | Reusable GitHub Action for user bundle evaluation, optional replay, AIKit-only opt-in public production judge proof and payload-free JSON artifacts; also exercised by required repository CI. |
