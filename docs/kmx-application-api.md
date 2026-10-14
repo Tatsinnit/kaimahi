@@ -5,6 +5,12 @@
 **Depends on:** [KMX lifecycle interface decision](kmx-lifecycle-interfaces.md)
 and the [AgentSuite Artifact Specification](../agentsuite/spec.md)
 
+KMX has two distinct public surfaces: the working `kmx` CLI and the
+experimental Go contracts in `pkg/kmx`. The CLI is the usable end-to-end
+product interface today. The Go package defines an intended application
+boundary, but it has no exported concrete implementation or constructor and is
+not wired to the CLI.
+
 **Implementation status:** `pkg/kmx` defines only the three northbound interfaces
 and their caller-facing values. `AgentEnvironment` currently has one setup
 operation; target resolution, inspection, teardown and recovery are deliberately
@@ -34,6 +40,10 @@ Their responsibilities are deliberately separate:
 | `AgentEnvironment` | Establish one logical environment | Exact target/runtime resolution, inspection, teardown, agent definition or deployment |
 | `AgentSuites` | Validate one exact definition, build its image-backed member set, and push those immutable outputs | Image-free execution profiles, destination mutation or implementation-specific build/storage controls |
 | `AgentDeployments` | Build direct revisions and lift/status/retire deployable sources | Target teardown or OCI publication |
+
+Their definitions are in `pkg/kmx/environment.go`, `pkg/kmx/suite.go` and
+`pkg/kmx/agent.go`, respectively. The package also exports their request,
+result, reference and receipt values.
 
 The dependency direction is:
 
@@ -66,9 +76,26 @@ type AgentEnvironment interface {
 ### Establish an environment
 
 ```go
-environment, err := controller.environment.Up(ctx, kmx.EnvironmentSpec{
-    Name: "local",
-})
+func prepareEnvironment(
+	ctx context.Context,
+	environments kmx.AgentEnvironment,
+) (kmx.Environment, error) {
+	environment, err := environments.Up(ctx, kmx.EnvironmentSpec{Name: "local"})
+	if err != nil {
+		return kmx.Environment{}, err
+	}
+	return environment, nil
+}
+```
+
+The caller receives the implementation through dependency injection; there is
+no package-global client or public adapter selection. `Up` returns:
+
+```go
+type Environment struct {
+	Ref  EnvironmentRef
+	Spec EnvironmentSpec
+}
 ```
 
 `EnvironmentSpec` contains only a logical name. It has no Kubernetes context,
@@ -86,7 +113,9 @@ This first interface intentionally does not promise inspection, teardown,
 registration, operation recovery or ownership receipts. Those methods require
 production persistence and fail-closed semantics before they become public
 contract. The current `kmx local down`, AKS ownership records and context
-selection remain separate installed behavior.
+selection remain separate installed behavior. `EnvironmentSpec`,
+`EnvironmentRef` and `Environment` have closed validated JSON representations;
+no environment store, ownership record or recovery protocol is implemented.
 
 ## AgentSuite shipping lifecycle
 
@@ -364,9 +393,17 @@ Potential CLI adapters are:
 |---|---|
 | bare `kmx local up` | Conceptually `AgentEnvironment.Up`; current command is not wired to the interface |
 | `kmx local down` | No current `AgentEnvironment` method; installed teardown behavior is unchanged |
-| `kmx suite validate` | Conceptually `AgentSuites.Validate`; current command does not materialize the northbound result |
+| `kmx suite validate` | Related to `AgentSuites.Validate`; the current command does not materialize its staged result |
+| `kmx suite build` | The current one-member experimental command is not `AgentSuites.Build` |
+| `kmx suite push` / root `kmx push --workspace DIR REF` | Current extracted-definition/workspace transfer is not `AgentSuites.Push` |
 | future suite-wide build/push workflow | `AgentSuites.Build` / `AgentSuites.Push` |
-| `kmx bundle lift/status/retire` | `AgentDeployments` |
+| `kmx bundle lift` | Conceptually `AgentDeployments.Lift`; not wired today |
+| `kmx bundle status` | Conceptually `AgentDeployments.Status`; not wired today |
+| `kmx bundle retire` | Conceptually `AgentDeployments.Retire`; not wired today |
+
+The current CLI also provides `kmx suite pull`; retrieval remains an internal
+input/materialization capability rather than another northbound suite workflow
+method. Every row is a product-level relationship, not shared implementation.
 
 Environment inspection/teardown/recovery, exact target resolution, run/cancel,
 quickstart, durable progress streams, and network APIs remain deferred.
