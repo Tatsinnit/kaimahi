@@ -22,6 +22,34 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
 
 ## Unreleased
 
+### Added
+
+- Named workspace destinations in optional, credential-free `kmx.yaml` supply
+  selectors to `eval/lift --to NAME`. Explicit invocation flags override saved
+  fields; values resolve once and cannot be redirected by later config edits.
+  Runtime remains package-owned. Eval may use saved `evalTarget`; digest Lift
+  never guesses a destination, and explicit-reference Lift without `--to`
+  remains workspace-independent. Root workspace push and named Lift can use an
+  exact-host registry HTTP policy, with explicit false overriding it. Existing
+  evidence, promotion, remote guards and registry authentication remain unchanged.
+- Root `kmx ctx` returns after its removal in v0.6.0, with new list-only
+  `ctx [--check] [-o table|json]` semantics for named destinations, not a
+  current/default selection. The old context-switching alias remains removed:
+  `ctx <context>` and `ctx use <name>` are still refused. Optional checks read
+  local context names and anonymous registry reachability; they are not
+  runtime/inference readiness or evaluation proof. `kmx targets` remains the
+  separate runtime-capability view. Composed eval/push/Lift is not implemented;
+  kagent remains excluded until its candidate cleanup is qualified.
+
+### Upgrading
+
+- Optionally add workspace-root `kmx.yaml` for named destinations and use
+  `kmx ctx` to list them, then `eval/lift --to NAME`. No default/current Lift
+  selection or context switch is introduced. Existing explicit selectors work
+  without config. Keep supplying eval `--out`, a push reference and Lift
+  digest/`--evidence`; configuration does not enable the composed workflow.
+  See [named destinations](docs/suite-workspace.md#named-destinations).
+
 ## v0.6.0 — 2026-10-14
 
 ### Added

@@ -60,7 +60,7 @@ examples or fabricated callers are needed to preserve mechanical coverage.
 
 | Path | Class | Evidence |
 |---|---|---|
-| `cmd/kmx` (39 files) | **Installed** | Root native workspace create/eval/push/digest Lift, Orka install/status/show/list, independent live `run --agent`/chat and Task results, quickstart/native console creation, context/local and hidden AKS setup/teardown, read-only targets, public suite validation/diff/build/push/pull. Eval diff reads only strict full-passing native Orka/kagent suite receipts; pinned AgentSessions native authoring/development eval and exact-S evaluated push remain independent of deleted bundle evaluation, with no cluster settings, auth or remote lifecycle; from-sessions exports private references only. Removed bundle/live-create routes are unknown; interactive Lift only prints the move notice. |
+| `cmd/kmx` (43 files) | **Installed** | Named workspace destinations with resolve-once eval/Lift selectors, offline list-only `ctx` and optional bounded local-context/anonymous registry checks (not capability or execution proof). Root native workspace create/eval/push/digest Lift, Orka install/status/show/list, independent live `run --agent`/chat and Task results, quickstart/native console creation, context/local and hidden AKS setup/teardown, read-only targets, public suite validation/diff/build/push/pull. Eval diff reads only strict full-passing native Orka/kagent suite receipts; pinned AgentSessions native authoring/development eval and exact-S evaluated push remain independent of deleted bundle evaluation, with no cluster settings, auth or remote lifecycle; from-sessions exports private references only. Removed bundle/live-create routes are unknown; interactive Lift only prints the move notice. |
 
 ## `agentsuite/` — public specification package
 
@@ -141,7 +141,7 @@ pending the Go retirement pass; historical data is not evidence of active reader
 | `kmx/toolchain` | 2 | Installed | Pinned, checksum-verified kind, kubectl and Helm downloads. |
 | `kmx/portforward` | 1 | Installed | Owned loopback kubectl forwards with bind proof and process lifetime, shared by native Orka results and host tools. |
 | `kmx/lift` | 2 | Installed | Cloud-independent lift rules and persisted ownership records. |
-| `kmx/config` | 1 | Installed | Native settings and state/cache path resolution. |
+| `kmx/config` | 2 | Installed | Native settings/state/cache paths and strict bounded credential-free kmx.yaml operational destination selectors, independent from authored suite identity. |
 | `kmx/cliui` | 2 | Installed | Destination-aware CLI presentation. |
 | `kmx/run` | 1 | Installed | Shell-out layer. |
 | `kmx/secretshapes` | 2 | Installed | Shared credential-shape checks and data. |
