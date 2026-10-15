@@ -261,7 +261,7 @@ caches, and `node_modules` untracked. Documentation changes retain the existing
 link, README-front-door and repository-map checks and run
 `npm --prefix docs run docs:check` when they affect the rendered site. The
 current exact alpha framework pin is a draft choice, not approval to publish;
-hosting/versioning changes require a separate review.
+custom-domain and versioned-site changes require a separate review.
 
 Run checks appropriate to the changed paths as described in CONTRIBUTING.md.
 Command changes normally require `go test ./cmd/kmx`, affected operation-package

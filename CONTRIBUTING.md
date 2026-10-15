@@ -115,7 +115,7 @@ For a browser preview of the maintained Markdown, run `make docs-preview` with
 Node.js 22.12 or newer. The root README and `docs/*.md`, plus
 `agentsuite/spec.md` while it remains local, are the source of truth; generated
 HTML and caches are ignored. See the
-[documentation-site draft](docs/docs-site.md) for versioning, publication and
+[documentation site](docs/docs-site.md) for versioning, publication and
 removal boundaries.
 
 The checkers above are the ones you can usefully run by hand. CI's hygiene
