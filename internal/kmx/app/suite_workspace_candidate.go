@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/kaimahi-agents/kaimahi/internal/kmx/agentsuite/workspace"
 )
@@ -46,7 +47,7 @@ func (e *suiteCandidateOutcome) Error() string {
 	return message
 }
 
-// Internal only: public evaluation and convenience callers remain canonical.
+// Public Orka evaluation uses candidates; convenience callers stay canonical.
 // One fresh guard covers this concrete frozen worker's pair, Tasks and cleanup.
 // No local persistence, name-based recovery, selectable partial proof or retries.
 func (a *App) evaluateSuiteWorkspaceCandidate(ctx context.Context, p *PreparedSuiteWorkspaceEvaluation) (err error) {
@@ -65,6 +66,14 @@ func (a *App) evaluateSuiteWorkspaceCandidate(ctx context.Context, p *PreparedSu
 		return errSuiteNativeEvaluation
 	}
 	p.started = true
+	for _, frame := range p.inventory {
+		if frame.Metadata.Runs > 1 {
+			if _, err := fmt.Fprintf(a.Err, "Run preflight: %d fresh Tasks, %s per run, %s total execution budget (upper bound; excludes placement; cancellation can stop earlier).\n", len(p.inventory), p.options.CaseTimeout, time.Duration(len(p.inventory))*p.options.CaseTimeout); err != nil {
+				return err
+			}
+			break
+		}
+	}
 	cfg, runner := *a.Cfg, *a.Run
 	runner.Context = ctx
 	worker := *a
@@ -84,6 +93,10 @@ func (a *App) evaluateSuiteWorkspaceCandidate(ctx context.Context, p *PreparedSu
 	}
 	native, err := worker.prepareSuiteNativeCandidate(ctx, p.suite, p.options.ToNamespace, strings.TrimPrefix(p.options.Inference, "provider:"), runID)
 	if err != nil {
+		return err
+	}
+	worker.reportCandidateStartup(ctx, native.Subject.Target)
+	if _, err := fmt.Fprintf(worker.Err, "Current candidate: run=%s context=%q clusterUID=%s namespace=%q namespaceUID=%s member=%s suite=%s\nRecovery: kmx eval cleanup %s --to-context %s --to-namespace %s\n", runID, cfg.KubeContext, native.Subject.Target.ClusterUID, native.Subject.Target.Namespace, native.Subject.Target.NamespaceUID, native.Subject.PhysicalMember, native.Subject.SuiteDigest, runID, shellArg(cfg.KubeContext), shellArg(native.Subject.Target.Namespace)); err != nil {
 		return err
 	}
 	if !validSuitePassingSubject(native.Subject) {

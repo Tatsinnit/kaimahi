@@ -41,6 +41,15 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
 
 ### Added
 
+- Public Orka workspace eval uses fresh digest/run candidates, never adoption,
+  update or reuse, and exports passing evidence only after verified UID/RV-safe
+  cleanup and owner-UID child absence. Startup reports possible leftovers only.
+  `kmx eval cleanup [run-id] --to NAME` lists without a run; selecting one full
+  run previews UIDs and requires confirmation even locally. Unattributable
+  orphans refuse. Candidate evidence needs standalone Lift `--promote` even in
+  the same environment; private Quickstart/console and other runtimes are unchanged.
+  No cleanup journal, lease, automatic sweep or publication blockade.
+
 - Native Orka/kagent workspace cases accept optional KMX `runs`/`minPasses`.
   Default one run; omitted threshold requires all declared runs. Each run uses
   a fresh Task with its own configured deadline; repeat preflight prints the

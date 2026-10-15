@@ -28,7 +28,7 @@ func TestSuiteRepeatThresholdPipeline(t *testing.T) {
 			var native *evalFixture
 			var sendsDir string
 			if runtime == "orka" {
-				a, _, _, native = nativeEvaluationFixture(t)
+				a, _, native, _ = publicNativeEvaluationFixture(t)
 				opt = nativeEvaluationOptions(t)
 				opt.ResultPort = native.opt.ResultPort
 			} else {
@@ -412,7 +412,7 @@ func TestSuiteRepeatFiveRunThresholdPatterns(t *testing.T) {
 }
 
 func TestSuiteRepeatTimeBudgetPreflight(t *testing.T) {
-	a, _, _, native := nativeEvaluationFixture(t)
+	a, _, native, _ := publicNativeEvaluationFixture(t)
 	opt := nativeEvaluationOptions(t)
 	opt.ResultPort = native.opt.ResultPort
 	opt.CaseTimeout = 5 * time.Minute
