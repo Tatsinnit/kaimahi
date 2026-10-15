@@ -33,10 +33,11 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
 - A draft docs-as-code website renders the existing README, maintained guides,
   and AgentSuite specification directly with responsive navigation, local search,
   dark mode, a keyboard-accessible journey chooser and an explicit `main` versus
-  stable-release boundary. `make docs-preview` serves it locally and CI builds
-  and tests every route. Generated output stays untracked; no hosting,
-  publication credential, CLI, runtime or deployment behavior is added.
-  [Documentation site draft](docs/docs-site.md).
+  stable-release boundary. `make docs-preview` serves it locally, CI builds and
+  tests every route, and a keyless main-only workflow publishes the same output
+  at `https://kaimahi-agents.github.io/kaimahi/`. Generated output stays
+  untracked; no repository secret, CLI, runtime or agent deployment behavior is
+  added. [Documentation site](docs/docs-site.md).
 
 - AgentSuite draft evaluation storage: producers SHOULD embed optional
   `evals/<agent>/index.json` and ordered JSON cases, JCS-bound through the
