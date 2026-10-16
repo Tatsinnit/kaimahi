@@ -34,6 +34,18 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
   does not authenticate an evaluator or attest execution truth/readiness. The
   published v0.3.1 loader refuses special files/symlinks in OCI metadata and
   referenced blobs instead of blocking on FIFO inputs; module sums are pinned.
+- Support version-aware offline v2 network policy
+  resolution, including administrative intersection and explicit deny-all.
+  Orka member YAML accepts member-relative `policy: policy.json`; preparation
+  packages authored JCS at `policies/<id>.json` through `Agent.policy`, preserving
+  authored arrays and policy-free bytes/digests. Offline inventories and
+  unevaluated publication retain policy. Eval, private preparation, evaluated
+  publication, composed/digest Lift and experimental AgentKit export refuse
+  declared policies until qualified enforcement exists; no policy is installed
+  or enforced. kagent/AgentSessions policy source declarations refuse. File-count
+  budgets allow one optional policy per member (212 maximum), with existing byte
+  limits unchanged. Static path checks are not protection against concurrent
+  hostile workspace mutation. [Policy contract](docs/portable-policy.md).
 
 - Release Lift stamps newly created Orka/kagent primary objects with non-secret
   `kaimahi.dev/lift-record` metadata: suite and consumed receipt identity,
