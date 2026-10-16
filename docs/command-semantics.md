@@ -47,7 +47,7 @@ arguments instead of a deleted Make target or an invented BYO recovery route.
 | `agent chat <name> [message...]` | `chat <name> [message...]` | Interactive Orka session, not workspace execution. |
 | `agent run [<bundle-dir>]` | `run --agent NAME` | Bundle mode removed; independent live Orka Task/answer/result contracts retained. Suite-owned Agents refuse legacy invocation. |
 | `agent show <name>` / `agent list` | `orka show <name>` / `orka list` | Live Orka detail/inventory, not workspace inspection. Show still requires namespace. |
-| `agent evaluate/lift/retire/status` / `bundle ...` | Removed | Old commands/readers/writers/receipts removed outright, no stubs or migration. Suite status/retirement remain unavailable. |
+| `agent evaluate/lift/retire/status` / `bundle ...` | Removed | Old commands/readers/writers/receipts removed outright, no stubs or migration. No legacy-status reader or retirement replacement. |
 | `agent verify` / `bundle verify` | Removed | Legacy replay/judges and RecordedExecution are removed without a native replacement. |
 | `agent eval diff <before.json> <after.json>` | `eval diff <before.json> <after.json>` | Offline receipt comparison, not evaluation execution. |
 | `agent eval from-sessions <session-uid>...` | `eval from-sessions <session-uid>...` | Private reference-case preparation, not execution. |
@@ -55,8 +55,9 @@ arguments instead of a deleted Make target or an invented BYO recovery route.
 
 The entire `kmx agent` group is removed, including its hidden edit stub, with no
 aliases or retirement stubs. Use kubectl to edit live Orka resources. Root
-`status` and `orka status` retain the same table-only Orka runtime report;
-There is no suite status/retirement replacement. Root `eval` executes a full native workspace inventory with explicit
+`status --to NAME` separately inventories deployed Orka/kagent Agents and per-object
+Lift provenance with GET-only table/JSON reports; `orka status` retains the table-only
+runtime report. There is no legacy-status reader or retirement replacement. Root `eval` executes a full native workspace inventory with explicit
 target selection, optional private output and exactly one runtime-derived model binding: Orka
 `--inference` or packaged kagent `--bindings`. Standalone packaged-reference
 evaluation remains unimplemented. Root digest `lift` deploys a packaged native
@@ -222,7 +223,8 @@ recovery or teardown behavior. Ready/answered/evaluated are distinct evidence.
   Live Orka **show/list** and independent **run/chat** remain separate.
 - **Ready**, **answered** and **evaluated** are different evidence.
   **Unknown** is not **absent**; **retry** resubmits; **result** only retrieves.
-- Suite status/retirement remain unavailable. Lift does not transfer live state,
+- Destination status is GET-only inspection; retirement remains unavailable.
+  Lift does not transfer live state,
   sessions or memory, delete source, perform cutover or grant teardown authority.
 
 ## Audit and existing work

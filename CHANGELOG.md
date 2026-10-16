@@ -24,6 +24,14 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
 
 ### Added
 
+- `kmx status --to NAME [--workspace DIR] [-o table|json]` inventories deployed
+  Orka/kagent Agents, per-object suite/consumed-evidence provenance and current
+  placement readiness using bounded GETs only. Missing, unknown and foreign
+  provenance stay distinct; readable partial rows and separate candidate roots
+  remain visible. No private-history fallback, Secret reads, tool provisioning,
+  evaluation, repair or annotation backfill. Ready is not answered/evaluated;
+  unsigned records do not prove original UID continuity.
+
 - `kmx eval verify --suite LAYOUT --evidence FILE --expect FILE` checks detached
   public evidence offline using shared suite v0.3.1 VerifyEvaluation. Digest input
   requires explicit `--from-layout DIR`, without registry/cache/state lookup.
@@ -86,6 +94,12 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
   Authoring remains provisional pending [#526](https://github.com/kaimahi-agents/kaimahi/issues/526).
 
 ### Breaking
+
+- Root `kmx status` requires `--to NAME` and becomes a table/JSON destination
+  observer. **Instead:** use `kmx orka status` for the unchanged table-only Orka
+  runtime report. Bare status refuses with both usage hints. Destination status
+  exits1 for unknown/unhealthy/drift,2 for complete known pending placement and0
+  for complete ready/empty; failure takes precedence over pending.
 
 - The portable AgentSuite Go package moves from `github.com/kaimahi-agents/kaimahi/agentsuite`
   to the independent `github.com/agent-primitives/suite` module. There is no forwarding package.
