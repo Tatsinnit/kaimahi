@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -51,8 +52,45 @@ func aksDemoShells(t *testing.T) []string {
 	shells := []string{"bash"}
 	if _, err := exec.LookPath("zsh"); err == nil {
 		shells = append(shells, "zsh")
+	} else {
+		t.Log("zsh is not installed; cross-shell behavior runs under Bash only on this host")
 	}
 	return shells
+}
+
+func TestAKSDemoAllShellBlocksParseAndLint(t *testing.T) {
+	blocks := aksDemoBlocks(t)
+	for i, block := range blocks {
+		t.Run("bash/block-"+fmt.Sprint(i+1), func(t *testing.T) {
+			cmd := exec.Command("bash", "-n")
+			cmd.Stdin = strings.NewReader(block)
+			if out, err := cmd.CombinedOutput(); err != nil {
+				t.Fatalf("Bash syntax: %v\n%s", err, out)
+			}
+		})
+	}
+	if zsh, err := exec.LookPath("zsh"); err == nil {
+		for i, block := range blocks {
+			t.Run("zsh/block-"+fmt.Sprint(i+1), func(t *testing.T) {
+				cmd := exec.Command(zsh, "-n")
+				cmd.Stdin = strings.NewReader(block)
+				if out, err := cmd.CombinedOutput(); err != nil {
+					t.Fatalf("Zsh syntax: %v\n%s", err, out)
+				}
+			})
+		}
+	} else {
+		t.Log("zsh is not installed; skipping optional Zsh syntax pass")
+	}
+	if shellcheck, err := exec.LookPath("shellcheck"); err == nil {
+		cmd := exec.Command(shellcheck, "-s", "bash", "-")
+		cmd.Stdin = strings.NewReader(strings.Join(blocks, "\n"))
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("ShellCheck: %v\n%s", err, out)
+		}
+	} else {
+		t.Log("shellcheck is not installed; skipping optional lint pass")
+	}
 }
 
 func runAKSDemoBlock(t *testing.T, shell, block string, env map[string]string) ([]byte, error) {

@@ -296,6 +296,20 @@ func TestGeneratedCommandsPreserveInvokingExecutable(t *testing.T) {
 	}
 }
 
+func TestInvocationExecutableMakesOnlyPathInvocationsAbsolute(t *testing.T) {
+	if got := invocationExecutable("kmx"); got != "kmx" {
+		t.Fatalf("installed executable changed: %q", got)
+	}
+	relative := filepath.Join("build with space", "kmx")
+	want, err := filepath.Abs(relative)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := invocationExecutable(relative); got != want {
+		t.Fatalf("path executable = %q, want %q", got, want)
+	}
+}
+
 func TestBareGroupsShowCobraHelpWithoutLoadingConfig(t *testing.T) {
 	for _, group := range []string{"orka", "suite", "task"} {
 		var out, errOut bytes.Buffer

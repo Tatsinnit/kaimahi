@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime/debug"
 	"strings"
 
@@ -31,12 +32,26 @@ type dependencies struct {
 func productionDependencies() dependencies {
 	return dependencies{
 		stdin: os.Stdin, stdout: os.Stdout, stderr: os.Stderr,
-		executable: os.Args[0],
+		executable: invocationExecutable(os.Args[0]),
 		loadConfig: config.LoadWithOverrides, newApp: app.New, buildInfo: debug.ReadBuildInfo,
 		newAgentKitBuilder: func(options agentkitbuilder.Options) kmxsuite.SandboxBuilder {
 			return agentkitbuilder.New(options)
 		},
 	}
+}
+
+// invocationExecutable keeps installed names concise, but makes a path-based
+// checkout invocation independent of the directory a recovery runs from. It
+// deliberately does not resolve symlinks.
+func invocationExecutable(value string) string {
+	if !strings.ContainsRune(value, filepath.Separator) {
+		return value
+	}
+	absolute, err := filepath.Abs(value)
+	if err != nil {
+		return value
+	}
+	return absolute
 }
 
 type commandState struct {
