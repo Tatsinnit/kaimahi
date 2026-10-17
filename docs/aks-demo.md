@@ -301,20 +301,6 @@ model call, but is still checked against the current exact package before Azure
 creation by publishing to a transient local OCI layout.
 
 ```bash
-if [ -f "$EVIDENCE" ] && [ ! -L "$EVIDENCE" ]; then
-  printf 'Existing evidence found; checking exact workspace coherence.\n' >&2
-elif [ -e "$EVIDENCE" ]; then
-  printf 'Evidence path is not a regular non-symlink file.\n' >&2
-  false
-else
-  "$KMX" eval \
-    --workspace "$WORKSPACE" \
-    --to-context "$LOCAL_CONTEXT" \
-    --to-namespace orka-system \
-    --inference "provider:$INFERENCE_PROVIDER" \
-    --out "$EVIDENCE"
-fi
-
 check_evidence_coherence() {
   local check_root rc
   check_root=$(mktemp -d "$PRIVATE_DIR/coherence.XXXXXX") || return
@@ -322,17 +308,36 @@ check_evidence_coherence() {
     --workspace "$WORKSPACE" \
     --evaluation "$EVIDENCE" \
     --to-layout "$check_root/layout" \
-    "agentsuites/$AGENT:coherence-check"
+    "agentsuites/${AGENT}:coherence-check"
   rc=$?
   rm -rf "$check_root"
   return "$rc"
 }
 
-if check_evidence_coherence; then
-  unset -f check_evidence_coherence
+prove_demo_workspace() {
+  unset KMX_DEMO_PROOF_READY
+  if [ -f "$EVIDENCE" ] && [ ! -L "$EVIDENCE" ]; then
+    printf 'Existing evidence found; checking exact workspace coherence.\n' >&2
+  elif [ -e "$EVIDENCE" ]; then
+    printf 'Evidence path is not a regular non-symlink file.\n' >&2
+    return 1
+  else
+    "$KMX" eval \
+      --workspace "$WORKSPACE" \
+      --to-context "$LOCAL_CONTEXT" \
+      --to-namespace orka-system \
+      --inference "provider:$INFERENCE_PROVIDER" \
+      --out "$EVIDENCE" || return
+  fi
+  check_evidence_coherence || return
   export KMX_DEMO_PROOF_READY="$WORKSPACE|$EVIDENCE"
+}
+
+if prove_demo_workspace; then
+  unset -f prove_demo_workspace
 else
-  unset -f check_evidence_coherence
+  unset KMX_DEMO_PROOF_READY
+  unset -f prove_demo_workspace
   false
 fi
 ```
@@ -344,14 +349,17 @@ durable layout, registry artifact, deployment, or model call.
 ## 6. Review and create AKS Free tier
 
 Plan reads Azure account state but writes nothing. The function refuses unless
-the same-shell local coherence check completed:
+the same-shell local coherence check completed and passes again immediately
+before Azure creation:
 
 ```bash
 provision_demo_aks() {
-  [ "${KMX_DEMO_PROOF_READY:-}" = "$WORKSPACE|$EVIDENCE" ] || {
+  if [ "${KMX_DEMO_PROOF_READY:-}" != "$WORKSPACE|$EVIDENCE" ] ||
+    ! check_evidence_coherence; then
+    unset KMX_DEMO_PROOF_READY
     printf 'Local exact-package proof was not checked in this shell; refusing Azure creation.\n' >&2
     return 1
-  }
+  fi
   "$KMX" aks up --plan --payload orka \
     --resource-group "$RESOURCE_GROUP" \
     --registry "$ACR_NAME" \
@@ -371,9 +379,11 @@ provision_demo_aks() {
 }
 
 if provision_demo_aks; then
-  unset -f provision_demo_aks
+  unset KMX_DEMO_PROOF_READY
+  unset -f provision_demo_aks check_evidence_coherence
 else
-  unset -f provision_demo_aks
+  unset KMX_DEMO_PROOF_READY
+  unset -f provision_demo_aks check_evidence_coherence
   false
 fi
 ```

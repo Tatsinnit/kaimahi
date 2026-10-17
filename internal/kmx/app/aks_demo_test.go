@@ -108,6 +108,9 @@ func TestAKSDemoRequiresCoherentProofBeforeAzureCreation(t *testing.T) {
 esac`)
 	for _, shell := range aksDemoShells(t) {
 		t.Run(shell, func(t *testing.T) {
+			if err := os.WriteFile(calls, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
 			root := t.TempDir()
 			env := map[string]string{
 				"KMX": kmx, "KMX_DEMO_TEST_CALLS": calls, "PRIVATE_DIR": root,
@@ -130,6 +133,48 @@ esac`)
 			}
 			if len(raw) != 0 {
 				t.Fatalf("proof gate contacted KMX/Azure: %s", raw)
+			}
+		})
+	}
+}
+
+func TestAKSDemoInvalidatesEarlierProofWhenFreshCoherenceFails(t *testing.T) {
+	coherence := aksDemoBlock(t, "check_evidence_coherence()")
+	provision := aksDemoBlock(t, "provision_demo_aks()")
+	kmx, calls := fakeAKSDemoKMX(t, `case "$*" in
+  *"eval "*) : > "$EVIDENCE"; exit 0 ;;
+  *"push "*) [ ! -e "$KMX_DEMO_TEST_FAIL_PUSH" ] ;;
+  *"aks up"*) exit 0 ;;
+  *) exit 99 ;;
+esac`)
+	for _, shell := range aksDemoShells(t) {
+		t.Run(shell, func(t *testing.T) {
+			if err := os.WriteFile(calls, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			root := t.TempDir()
+			failPush := filepath.Join(root, "fail-push")
+			script := coherence + "\n: > \"$KMX_DEMO_TEST_FAIL_PUSH\"\n" + provision + `
+rc=$?
+[ -z "${KMX_DEMO_PROOF_READY+x}" ] || exit 91
+exit "$rc"
+`
+			_, err := runAKSDemoBlock(t, shell, script, map[string]string{
+				"KMX": kmx, "KMX_DEMO_TEST_CALLS": calls, "KMX_DEMO_TEST_FAIL_PUSH": failPush,
+				"PRIVATE_DIR": root, "WORKSPACE": filepath.Join(root, "workspace"),
+				"EVIDENCE": filepath.Join(root, "passing.json"), "AGENT": "greeter", "LOCAL_CONTEXT": "kind-local", "INFERENCE_PROVIDER": "inference",
+				"RESOURCE_GROUP": "demo-rg", "ACR_NAME": "registry123",
+				"AKS_CLUSTER": "demo-aks", "AZURE_LOCATION": "westus3",
+			})
+			if err == nil {
+				t.Fatal("failed fresh coherence check retained earlier authorization")
+			}
+			raw, readErr := os.ReadFile(calls)
+			if readErr != nil {
+				t.Fatal(readErr)
+			}
+			if strings.Count(string(raw), "push ") != 2 || strings.Contains(string(raw), "aks up") {
+				t.Fatalf("fresh proof gate did not stop Azure creation: %s", raw)
 			}
 		})
 	}
