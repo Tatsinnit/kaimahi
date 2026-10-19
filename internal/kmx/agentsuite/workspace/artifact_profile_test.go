@@ -1,11 +1,13 @@
 package workspace_test
 
 import (
+	"errors"
 	"path/filepath"
 	"testing"
 
 	suiteoras "github.com/kaimahi-agents/kaimahi/internal/kmx/agentsuite/oras"
 	"github.com/kaimahi-agents/kaimahi/internal/kmx/agentsuite/workspace"
+	"github.com/kaimahi-agents/kaimahi/pkg/suitematerial"
 )
 
 func TestLoadArtifactPreservesDeclaredRuntime(t *testing.T) {
@@ -33,5 +35,24 @@ func TestLoadArtifactPreservesDeclaredRuntime(t *testing.T) {
 				t.Fatalf("runtime or digest substituted: %+v", member)
 			}
 		})
+	}
+}
+
+func TestPublicMaterialDoesNotRequireRuntimeProfileSelection(t *testing.T) {
+	root, cache := profiledWorkspace(t)
+	p, err := workspace.Prepare(t.Context(), root, cache)
+	if err != nil {
+		t.Fatal(err)
+	}
+	public, err := suitematerial.LoadLayout(t.Context(), p.Path, suitematerial.Selection{ArtifactDigest: p.Descriptor.Digest.String(), MemberID: "greeter"})
+	if err != nil || public.Member.ID != "greeter" || public.Model.Model != "qwen-3.5-2b" || string(public.Instructions) != "Answer briefly.\n\nExact whitespace.\n" {
+		t.Fatal("profile-independent public material changed", err, public)
+	}
+	artifact, err := suiteoras.ReadArtifactLayout(t.Context(), p.Path, p.Descriptor.Digest.String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := workspace.LoadArtifact(t.Context(), artifact); !errors.Is(err, workspace.ErrProfileSelectionRequired) {
+		t.Fatalf("public material authorized unselected native execution: %v", err)
 	}
 }

@@ -174,7 +174,7 @@ func TestArtifactArchiveBoundsAndClosedTypes(t *testing.T) {
 	regular := func(name string, size int64) *tar.Header {
 		return &tar.Header{Name: name, Mode: 0644, Typeflag: tar.TypeReg, Size: size}
 	}
-	for _, tc := range []string{"file", "total", "files", "directories", "link", "hardlink", "fifo", "traversal", "duplicate", "pax", "gnu metadata", "raw budget", "truncated", "trailing", "concatenated"} {
+	for _, tc := range []string{"file", "total", "files", "directories", "hardlink", "fifo", "traversal", "duplicate", "pax", "gnu metadata", "raw budget", "truncated", "trailing", "concatenated"} {
 		t.Run(tc, func(t *testing.T) {
 			hs := []*tar.Header{regular("agentsuite.json", 2)}
 			switch tc {

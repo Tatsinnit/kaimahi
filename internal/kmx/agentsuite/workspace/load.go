@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	agentsuite "github.com/agent-primitives/suite"
+	kmxsuite "github.com/kaimahi-agents/kaimahi/internal/kmx/agentsuite"
 	suiteoras "github.com/kaimahi-agents/kaimahi/internal/kmx/agentsuite/oras"
 )
 
@@ -111,26 +112,35 @@ func loadNativeFiles(ctx context.Context, files map[string][]byte, digest string
 }
 
 func loadNativeMember(ctx context.Context, files map[string][]byte, suite agentsuite.Suite, native nativeRecord, profile RuntimeProfile, digest, graphDigest string, index int) (*NativeSuite, error) {
-	var member agentsuite.Agent
-	if err := agentsuite.Unmarshal(files[suite.Agents[index].Path], &member); err != nil {
+	if index < 0 || index >= len(suite.Agents) {
 		return nil, errors.New("invalid packaged native member")
 	}
-	cases, _, err := packagedCases(files, member)
+	material, err := kmxsuite.ProjectMember(ctx, files, digest, suite.Agents[index].ID)
+	if err != nil {
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		return nil, errors.New("invalid packaged native member")
+	}
+	if material.GraphDigest != graphDigest {
+		return nil, errors.New("invalid packaged native member")
+	}
+	cases, _, err := packagedCases(files, material.Agent)
 	if err != nil {
 		return nil, errors.New("invalid packaged native evaluation cases")
 	}
 	// All entry points guarantee complete ordered cases and a caller-owned map
 	// of verified bytes; inventory loaders pass the selected member's index.
 	result := &NativeSuite{
-		Digest:             digest,
-		GraphDigest:        graphDigest,
-		Name:               suite.Name,
-		MemberID:           member.ID,
-		Description:        member.Description,
-		Model:              member.Model.Model,
-		Instructions:       files[member.Instructions.Path],
-		MemberDigest:       suite.Agents[index].Descriptor.Digest,
-		InstructionsDigest: member.Instructions.Descriptor.Digest,
+		Digest:             material.ArtifactDigest,
+		GraphDigest:        material.GraphDigest,
+		Name:               material.SuiteName,
+		MemberID:           material.MemberID,
+		Description:        material.Description,
+		Model:              material.Model.Model,
+		Instructions:       material.Instructions,
+		MemberDigest:       material.MemberDescriptor.Digest,
+		InstructionsDigest: material.InstructionsDescriptor.Digest,
 		CompositionDigest:  suite.Compositions[index].Descriptor.Digest,
 		BuildProfileDigest: suite.BuildProfiles[0].Descriptor.Digest,
 		RendererVersion:    native.RendererVersion,
@@ -139,8 +149,8 @@ func loadNativeMember(ctx context.Context, files map[string][]byte, suite agents
 		Cases:              cases,
 		RequiredImages:     []string{},
 	}
-	if member.Policy != nil {
-		ref := *member.Policy
+	if material.Agent.Policy != nil {
+		ref := *material.Agent.Policy
 		result.Policy = &NativePolicy{Path: ref.Path, Descriptor: ref.Descriptor, Bytes: files[ref.Path]}
 	}
 	if err := ctx.Err(); err != nil {

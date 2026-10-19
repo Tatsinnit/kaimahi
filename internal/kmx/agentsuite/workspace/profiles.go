@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	agentsuite "github.com/agent-primitives/suite"
+	kmxsuite "github.com/kaimahi-agents/kaimahi/internal/kmx/agentsuite"
 	suiteoras "github.com/kaimahi-agents/kaimahi/internal/kmx/agentsuite/oras"
 )
 
@@ -288,8 +289,8 @@ func loadSelectedFiles(ctx context.Context, files map[string][]byte, digest stri
 		return nil, errors.New("ambiguous profile selection; --platform is required")
 	}
 	ref := matches[0]
-	var agent agentsuite.Agent
-	if err := agentsuite.Unmarshal(files[root.Agents[0].Path], &agent); err != nil {
+	material, err := kmxsuite.ProjectMember(ctx, files, digest, ref.Agent)
+	if err != nil {
 		return nil, err
 	}
 	var composition agentsuite.Composition
@@ -311,21 +312,17 @@ func loadSelectedFiles(ctx context.Context, files map[string][]byte, digest stri
 			buildDigest = p.Descriptor.Digest
 		}
 	}
-	cases, _, err := packagedCases(files, agent)
-	if err != nil {
-		return nil, err
-	}
-	graphDigest, err := agentsuite.Digest(files["agentsuite.json"])
+	cases, _, err := packagedCases(files, material.Agent)
 	if err != nil {
 		return nil, err
 	}
 	// Retained graph bytes never alias mutable caller-visible selection fields.
 	graph := &profiledGraph{files: cloneProfileFiles(files), digest: digest}
 	result := &NativeSuite{
-		Digest: digest, GraphDigest: graphDigest, Name: root.Name,
-		MemberID: agent.ID, Description: agent.Description, Model: agent.Model.Model,
-		Instructions: bytes.Clone(files[agent.Instructions.Path]),
-		MemberDigest: root.Agents[0].Descriptor.Digest, InstructionsDigest: agent.Instructions.Descriptor.Digest,
+		Digest: material.ArtifactDigest, GraphDigest: material.GraphDigest, Name: material.SuiteName,
+		MemberID: material.MemberID, Description: material.Description, Model: material.Model.Model,
+		Instructions: material.Instructions,
+		MemberDigest: material.MemberDescriptor.Digest, InstructionsDigest: material.InstructionsDescriptor.Digest,
 		CompositionDigest: ref.Descriptor.Digest, BuildProfileDigest: buildDigest,
 		Cases: cases, RequiredImages: []string{},
 		Profile: &rp, ProfileDigest: profileDigest, Platform: ref.Platform, profiled: graph,
@@ -333,8 +330,8 @@ func loadSelectedFiles(ctx context.Context, files map[string][]byte, digest stri
 	for i := range result.Cases {
 		result.Cases[i].Bytes = bytes.Clone(result.Cases[i].Bytes)
 	}
-	if agent.Policy != nil {
-		result.Policy = &NativePolicy{Path: agent.Policy.Path, Descriptor: agent.Policy.Descriptor, Bytes: bytes.Clone(files[agent.Policy.Path])}
+	if material.Agent.Policy != nil {
+		result.Policy = &NativePolicy{Path: material.Agent.Policy.Path, Descriptor: material.Agent.Policy.Descriptor, Bytes: bytes.Clone(files[material.Agent.Policy.Path])}
 	}
 	return result, ctx.Err()
 }

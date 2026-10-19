@@ -22,6 +22,16 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
 
 ## Unreleased
 
+### Added
+
+- Public Go package `pkg/suitematerial` loads one explicit member's verified,
+  caller-owned instructions and complete portable model requirement from a local
+  AgentSuite OCI layout or bounded uncompressed layout archive. It retains exact
+  artifact, graph, member and instruction identities, uses payload-free typed
+  refusals including a distinct resource-limit category, and performs no configuration, registry, runtime, evaluation,
+  publication or Lift operation. KMX native loaders consume the same projection
+  before applying their separate runtime-private checks.
+
 ## v0.8.1 — 2026-10-17
 
 ### Added
