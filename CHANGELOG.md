@@ -24,6 +24,13 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
 
 ### Added
 
+- Experimental offline multi-agent flow authoring with `kmx create NAME
+  --workspace DIR --members FILE --flow FILE`, deterministic preparation and
+  explicit native/public layout/archive inventory readers. Strict JSON imports
+  preserve the critical flow contract and one artifact identity; default readers,
+  execution and transfer/registry paths remain strict. No pipeline execution,
+  approval enforcement, publication or whole-suite evaluation is enabled.
+
 - Eval and composed workspace Lift show non-pass case/run, assertion IDs/types,
   both judge scores against the threshold and safe unknown-outcome classes.
   `--show-content` opts into sanitized bounded expected values, judge rationale
