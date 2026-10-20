@@ -53,6 +53,12 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
 
 ### Changed
 
+- AgentSuite validation now uses `github.com/agent-primitives/suite v0.5.0`.
+  Editor and external-validator registries should select the complete v0.5.0
+  schema bundle with `/schema/v0.5/` IDs. Historical hosted v0.1.0 schemas
+  remain byte-for-byte unchanged, not aliases to the new contract. Wire versions,
+  media types and digests of unchanged suite documents are unchanged.
+
 - Credential-shaped suite instructions now add a fixed redacted warning before
   the existing source/package hard refusal. Instructions are non-confidential
   and must never contain secrets; clean lint is not a secret-free guarantee.
@@ -77,6 +83,14 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
   still block; there is no retry, backfill or automatic cleanup.
 
 ### Breaking
+
+- Suite loading now refuses Suite/ToolProvider extensions without an explicit
+  `critical` boolean, present empty/null ToolProvider `variants`, and explicitly
+  null tool `outputSchema` properties. ToolProvider JSON decoding also rejects
+  unknown or duplicate properties. Declare extension criticality and omit absent
+  variants/output schemas; keep nonempty variants and valid schema descriptors.
+  Changed documents require rebinding their descriptors and ancestors. Explicit
+  `critical: false` remains valid; Agent extension acceptance is unchanged.
 
 - Destination status now reads the exact shared release ConfigMap for owned Orka
   rows. Read-only roles need named-record `get` access; denial makes the shared
