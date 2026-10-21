@@ -37,7 +37,7 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
   and answer excerpts on stderr; outcome JSON remains payload-free. Diagnostics
   remain separate from evidence. Non-pass runs are retained privately under
   KMX_HOME: last 10 per workspace across revisions, 64 KiB answers/128 KiB records,
-  owner-only and deterministically bounded. Offline `kmx eval explain` lists or
+  owner-only and deterministically bounded. Offline `kmx test explain` lists or
   shows retained diagnostics with opt-in content; --clear removes one ID or all
   only with explicit --workspace, without touching passing proof or upstream data.
   Failure JSON adds diagnostic/provenance IDs, completion/attribution flags and
@@ -76,6 +76,20 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
 
 ### Changed
 
+- Canonical `kmx test` replaces `kmx eval`, including all six helpers:
+  `cleanup`, `diff`, `explain`, `export`, `verify` and `from-sessions`. Test is unreleased;
+  v0.8.1 uses `eval`. The hidden legacy root and helpers remain callable for at
+  least one released version, adding exactly one stderr line per invocation:
+  `kmx eval is deprecated; use kmx test (same arguments).`
+  Arguments, flags, stdout, existing stderr labels, exit codes and state are
+  unchanged apart from the notice. Authored `eval/`, packaged `evals/`,
+  `evalTarget`/`evaluationTarget`, schemas, APIs and machine JSON remain unchanged.
+  Docs/site lead with Run / Test / Publish: existing live Orka Run, workspace
+  Test, registry `push` for Publish, and Deploy to real targets. No local Run,
+  numbered local versions, plugin or new Publish command is introduced.
+  Old guide fragments remain valid; removal requires a later announced breaking
+  release. See [Test compatibility](docs/kmx.md#test-compatibility-unreleased).
+
 - Canonical `kmx deploy` replaces packaged-suite `kmx lift`, with the same
   arguments, flags, runtime/evidence/consent guards and exit contracts. Deploy is
   unreleased; v0.8.1 uses `lift`. Deprecated `kmx lift` stays hidden but callable
@@ -85,8 +99,7 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
   Canonical human help/output says Deploy; machine JSON keys/values (including
   `targets` operation `"lift"`), public Go/API/internal `Lift` names, evidence,
   storage and annotations are unchanged. Old guide fragments remain valid.
-  Removal requires a later announced breaking release. Test/Prove wording and
-  the `eval` namespace are unchanged.
+  Removal requires a later announced breaking release.
 
 - Workspace `lift --verbose` no longer prints judge rationale by itself; use
   `--show-content` for non-pass content. Deploy-only and plan-only Lift refuse
@@ -148,6 +161,14 @@ to do. Sections: **Added**, **Changed**, **Fixed**, **Breaking**, **Upgrading**.
   completed entries (ten retained, 64 KiB total); pending/partial proof never
   rolls. Agents lifted by v0.8.1 or earlier are not enrolled for update; explicitly
   recreate when ready. See [operator recovery](docs/suite-workspace.md#release-retention-and-operator-recovery).
+
+### Upgrading
+
+- For unreleased main builds, change maintained `kmx eval` invocations and all
+  six helper routes to `kmx test`. v0.8.1 still uses `eval`. The hidden alias
+  remains callable for at least one released version with one deprecation notice
+  on stderr; stdout, arguments, exit codes and state do not change. Do not rename
+  case directories, receipts or configuration fields. No data migration is needed.
 
 ## v0.8.1 — 2026-10-17
 

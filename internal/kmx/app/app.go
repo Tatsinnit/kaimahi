@@ -30,6 +30,13 @@ type progressPresenter interface {
 	Info(string) string
 }
 
+func (a *App) testCommandVerb() string {
+	if a.TestPresentation {
+		return "test"
+	}
+	return "eval"
+}
+
 // App carries the resolved configuration and the streams every command
 // writes to.
 type App struct {
@@ -48,6 +55,9 @@ type App struct {
 	// DeployPresentation selects current CLI stage labels only. Historical JSON,
 	// plan identities and consent-bound data remain unchanged; zero preserves Lift.
 	DeployPresentation bool
+	// TestPresentation selects canonical test recovery advice only; zero keeps
+	// the legacy eval spelling. Evidence and execution are unaffected.
+	TestPresentation bool
 	// InvocationCommand is the shell-quoted CLI invocation used for guard retry
 	// advice. Interactive sub-operations leave it empty and supply their own.
 	InvocationCommand string
@@ -119,7 +129,7 @@ func New(cfg *config.Config) *App {
 	r := run.Default()
 	r.Env = cfg.KindEnv()
 	r.Unset = cfg.KindUnset()
-	return &App{Cfg: cfg, Run: r, Out: os.Stdout, Err: os.Stderr, Stdin: os.Stdin}
+	return &App{Cfg: cfg, Run: r, Out: os.Stdout, Err: os.Stderr, Stdin: os.Stdin, TestPresentation: true}
 }
 
 // operationContext is shared by commands, network requests, and retry waits.
