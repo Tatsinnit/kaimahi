@@ -1,6 +1,9 @@
 // Package mcp adapts local agent-file operations to stdio MCP.
 // File access requires an explicit root; execution uses shared App snapshots.
 // Tool requests must not choose model endpoints or substitute a runner.
+// Separate unwired Squad cast/enrich primitives use a trusted installed program,
+// operation-owned starter observations, byte-preserving owned-field edits and
+// partial-effect reporting. They add no tools, native preview or dispatch.
 package mcp
 
 import (
@@ -49,6 +52,10 @@ func (e *Error) Error() string {
 		return "cancelled: operation stopped before publication"
 	case "deadline_exceeded":
 		return "deadline_exceeded: operation deadline elapsed"
+	case "squad_starter_changed":
+		return "squad_starter_changed: inspect the native member and partial effects manually; no automatic retry or adoption"
+	case "squad_enrichment_failed":
+		return "squad_enrichment_failed: inspect the registered native member and partial effects manually; do not repeat cast or use canonical Edit"
 	default:
 		return e.Code + ": operation refused"
 	}
@@ -61,8 +68,8 @@ type File struct {
 	Revision string `json:"revision"`
 }
 
-// Files holds one explicitly selected root. Validate must call the canonical
-// parser; injecting it keeps filesystem policy independent of parser ownership.
+// Files holds one explicitly selected root with a caller-selected validator.
+// v1 uses canonical parsing; native cast operations bind their explicit profile.
 type Files struct {
 	root     *os.Root
 	validate func(string, []byte) error
@@ -296,6 +303,10 @@ func (f *Files) Create(ctx context.Context, p string, b []byte) (File, error) {
 	return File{Path: p, Revision: revision(b)}, nil
 }
 func (f *Files) Edit(ctx context.Context, p, expected string, b []byte) (File, error) {
+	return f.editObserved(ctx, p, expected, b, nil)
+}
+
+func (f *Files) editObserved(ctx context.Context, p, expected string, b []byte, observed *sourceIdentity) (File, error) {
 	if err := cancelled(ctx); err != nil {
 		return File{}, err
 	}
@@ -311,11 +322,17 @@ func (f *Files) Edit(ctx context.Context, p, expected string, b []byte) (File, e
 		return File{}, err
 	}
 	defer parent.Close()
+	if observed != nil && !f.observedParent(p, parent, observed) {
+		return File{}, refusal("stale_revision")
+	}
 	target, old, info, err := readTarget(parent, path.Base(p))
 	if err != nil {
 		return File{}, err
 	}
 	defer target.Close()
+	if observed != nil && !os.SameFile(observed.file, info) {
+		return File{}, refusal("stale_revision")
+	}
 	if revision(old) != expected {
 		return File{}, refusal("stale_revision")
 	}
@@ -338,7 +355,8 @@ func (f *Files) Edit(ctx context.Context, p, expected string, b []byte) (File, e
 	// Locks follow inodes across replacement. A waiter on the replaced inode
 	// must refuse rather than treating that obsolete lock as current authority.
 	current, err := parent.Lstat(path.Base(p))
-	if err != nil || !os.SameFile(info, current) || current.Mode() != info.Mode() || !singleLink(target) {
+	if err != nil || !os.SameFile(info, current) || current.Mode() != info.Mode() || !singleLink(target) ||
+		(observed != nil && !f.observedParent(p, parent, observed)) {
 		return File{}, refusal("stale_revision")
 	}
 	if _, err := target.Seek(0, io.SeekStart); err != nil {
