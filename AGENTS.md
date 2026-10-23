@@ -26,12 +26,13 @@ changes in the package's Go doc comment.
   upstream model and incomplete/refusal/tool outcomes, not a fabricated pass.
   This is not a proxy or CLI-chat replacement.
   File CLI Run/Test consume it with explicit `--provider copilot`; unbound MCP
-  defaults non-fake authored models to Copilot when no startup route is selected.
-  Both use the exact authored model and existing available credentials. Explicit
-  routes, authored fake and legacy root-bound MCP behavior remain unchanged.
+  defaults effective non-fake models to Copilot when no startup route is selected.
+  Both use the exact runtime-selected model and existing available credentials.
+  Trusted route provider/endpoint/auth and legacy root-bound MCP behavior remain unchanged.
   Default only the pinned Copilot endpoint; refuse other endpoints before credential access.
-  Never inject tokens in the runner. Keep known Copilot errors static and safe,
-  stop later sends on them (including judging), and preserve cancellation.
+  Never inject tokens in the runner. Keep known Copilot errors safe; owned catalog
+  selection failures may list validated model IDs, never raw provider errors.
+  Stop later sends on them (including judging), and preserve cancellation.
   Establish auth through the catalog; exchange only after credential refusal,
   never subscription/policy/quota refusal. Never replay inference or substitute
   a model. Keep modelaccess independent of App and Unix-only helpers. Foundry
@@ -506,13 +507,19 @@ never the path wrapper or shell CLI strings. Optional native v2 targets use
 explicit `App.PreviewSquadSnapshot` and revalidated native state, not auto-detection.
 Provider/endpoint selection comes from trusted startup configuration or the
 fixed unbound Copilot default, never from tool/charter endpoint fields; the exact
-model comes from the parsed agent file. Keep complete safe App results on errors;
+model resolves once as runtime override → authored model → `gpt-5.6-terra`.
+Omitted Model stays absent in source; present invalid Model still fails parsing.
+Use an execution copy, preserving original instructions/revision, in both runners.
+Keep complete safe App results on errors;
 App owns full-path projection and credential redaction; MCP must not restore raw
 paths after it returns. Fixture runners are not production execution. Edit preserves mode bits, not
 ownership/ACLs/xattrs; normal directory inheritance is the day-0 own-file contract.
 No new runner, Explain tool or MCP network listener. The read-only
 `kmx://agent/{path}` resource projects the requested supported agent file;
-it is not a fifth tool or generic file reader. No folder confirmation is needed
+it is not a fifth tool or generic file reader. Read-only `kmx://models` lazily
+projects validated Copilot IDs/default for the picker, without startup auth or
+inference. Model selection is memory-only, never source/history. Fence model
+changes as well as revisions; never attribute another model's result as current. No folder confirmation is needed
 for charter content. After successful Create, open its returned file.path in the
 existing canvas. Give one plain notice before the first hosted-model send;
 ordinary agent-file creation stays confirmation-free, without path-character
