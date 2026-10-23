@@ -1,11 +1,14 @@
 // Package mcp adapts local agent-file operations to stdio MCP.
 // File access requires an explicit root; execution uses shared App snapshots.
 // Tool requests must not choose model endpoints or substitute a runner.
+// The canonical resource includes an exact, revision-bound authoring snapshot.
+// Optional failure-only excerpts exclude passing and unknown answers from safe
+// results and observations; broader disclosure remains explicitly requested.
 // Optional native v2 branches use a trusted installed Squad program for guarded
 // init/cast, operation-owned starter observations and byte-preserving enrichment.
 // Reopened member operations revalidate native casting state, never infer origin
 // or persist kmx mapping. Preview shares App snapshots, not native dispatch.
-// Partial effects remain explicit; no extra tool, downloader or canvas actions.
+// Native partial effects remain explicit; no extra tool, downloader or canvas actions.
 package mcp
 
 import (
