@@ -269,7 +269,14 @@ func (p *prepared) run(ctx context.Context, examples []agentfile.Example, evalua
 		}
 		executor = journaled
 	}
-	defer func() { err = errors.Join(err, executor.Close()) }()
+	defer func() {
+		if closeErr := executor.Close(); closeErr != nil {
+			result.Verdict = agentruntime.EvaluationUnknown
+			result.Journaled = false
+			result.RunID = ""
+			err = errors.Join(err, closeErr)
+		}
+	}()
 
 	verdicts := make([]agentruntime.EvaluationVerdict, 0, len(examples))
 	for i, example := range examples {
@@ -381,7 +388,7 @@ func openJournalExecutor(dir, model string) (*journalExecutor, string, error) {
 	e := &journalExecutor{sessions: map[string]bool{}, lock: lock}
 	e.host, err = openHost(path, model, e.model)
 	if err != nil {
-		lock.release()
+		lock.discardRun()
 		return nil, runID, err
 	}
 	return e, runID, nil
@@ -395,7 +402,7 @@ func openToolJournalExecutor(dir, model string, tool controller.ToolFunc) (*jour
 	e := &journalExecutor{sessions: map[string]bool{}, lock: lock, tools: true}
 	e.host, err = openPreviewHost(path, localtools.HarnessName, localtools.Harness{Model: model}, e.model, tool)
 	if err != nil {
-		lock.release()
+		lock.discardRun()
 		return nil, runID, err
 	}
 	return e, runID, nil
@@ -465,6 +472,5 @@ func (e *journalExecutor) Execute(ctx context.Context, turn Turn) (Execution, er
 // may remove the finished run.
 func (e *journalExecutor) Close() error {
 	err := e.host.close()
-	e.lock.release()
-	return err
+	return errors.Join(err, e.lock.release())
 }

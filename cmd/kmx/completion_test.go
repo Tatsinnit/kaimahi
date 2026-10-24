@@ -127,3 +127,22 @@ func TestCompletionContextUsesEngineFlagOverInvalidEnvironment(t *testing.T) {
 		t.Fatalf("context = %q", got)
 	}
 }
+
+func TestGuardedWindowsDeferredCompletionIsInert(t *testing.T) {
+	for _, args := range [][]string{
+		{"__complete", "--context", ""},
+		{"__complete", "context", "use", ""},
+		{"__complete", "run", "--agent", ""},
+		{"__complete", "deploy", "--to", ""},
+	} {
+		var out, errOut bytes.Buffer
+		deps, loads := testDependencies(&out, &errOut)
+		deps.goos = "windows"
+		if err := execute(args, deps); err != nil {
+			t.Fatalf("%v: %v", args, err)
+		}
+		if *loads != 0 || strings.Contains(out.String(), "kind-") {
+			t.Fatalf("%v completion had effects: loads=%d stdout=%q stderr=%q", args, *loads, out.String(), errOut.String())
+		}
+	}
+}

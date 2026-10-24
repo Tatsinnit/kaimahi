@@ -18,7 +18,7 @@ import (
 // Construction does not resolve paths, create files or access credentials.
 func NewLocalFileRunner() agentpreview.Runner {
 	return &localFileRunner{
-		journaled: localpreview.NewRunner(localpreview.RunnerOptions{JournalDir: config.LocalPreviewJournalDir, Judge: localFilePreviewJudge, Tools: localtools.NewMCPHost}),
+		journaled: localpreview.NewRunner(localpreview.RunnerOptions{JournalDir: config.PrepareLocalPreviewJournalDir, Judge: localFilePreviewJudge, Tools: localtools.NewMCPHost}),
 		direct:    NewDirectFileRunner(),
 	}
 }
