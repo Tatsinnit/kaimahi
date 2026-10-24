@@ -1,167 +1,8 @@
 // Resource and authoring values are untrusted: render only inert DOM text.
 import { instructionSections, runtimeModelSelection } from "./authoring.mjs";
-import { el, inlineText, editorValue, insertPlainText, fillEditor, purposeText, instructionsContent, runtimeModelControl, pathControls } from "./editor.mjs";
-const checkKey = (a) => JSON.stringify([a.id, a.type]);
-function uniqueIndex(items, key) {
-  const map = new Map();
-  for (const item of items) {
-    const id = key(item);
-    map.set(id, map.has(id) ? null : item);
-  }
-  return map;
-}
-function inspectCases(payload) {
-  const r = payload.latest.status === "current" ? payload.latest.result : undefined;
-  const authored = uniqueIndex(payload.examples, (e) => e.id);
-  const observed = uniqueIndex(r?.examples ?? [], (e) => e.id);
-  const selected = uniqueIndex(r?.selection.caseIds ?? [], (id) => id);
-  return payload.examples.map((e) => {
-    const base = { example: e, state: "waiting", label: payload.latest.status === "stale" ? "Out of date" : "No current result" };
-    if (!r) return base;
-    if (!selected.has(e.id) && r.selection.scope !== "full") return { ...base, label: "Not in this run" };
-    const row = authored.get(e.id) === e && selected.get(e.id) === e.id ? observed.get(e.id) : undefined;
-    const unknown = { ...base, state: "unknown", label: "Incomplete", row };
-    if (!row) return unknown;
-    const expected = uniqueIndex(e.assertions, checkKey);
-    const checks = uniqueIndex(row.assertions, checkKey);
-    const ambiguous = [...expected.values(), ...checks.values()].some((v) => v === null);
-    const matched = e.assertions.every((a) => checks.get(checkKey(a))?.verdict === "pass");
-    const covered = expected.size === checks.size && [...checks.keys()].every((key) => expected.has(key));
-    const complete = row.state === "complete";
-    let state = "unknown";
-    if (!ambiguous && complete && row.verdict === "fail") state = "fail";
-    if (!ambiguous && complete && row.verdict === "pass" && covered && matched) state = "pass";
-    return { ...unknown, state, label: state === "pass" ? "Passed" : state === "fail" ? "Failed" : "Incomplete", checks, expected };
-  });
-}
-
-const friendlyName = (id) => {
-  const text = id.replace(/[-_]+/g, " ");
-  return text ? text[0].toUpperCase() + text.slice(1) : "Unnamed test";
-};
-const clone = (value) => JSON.parse(JSON.stringify(value));
-const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-const operandKey = (type) => type === "regex" ? "pattern" : type === "llmJudge" ? "rubric" : "value";
-const EDITABLE_TYPES = [["contains", "Contains"], ["notContains", "Does not contain"], ["regex", "Matches regex"]];
-const quoted = (text) => `“${text}”`;
-const fieldValue = (a) => new Map(a.fields).get(operandKey(a.type)) ?? "";
-const checkLabel = (a) => {
-  const value = fieldValue(a);
-  return a.type === "contains" ? `Contains ${quoted(value)}` : a.type === "notContains" ? `Does not contain ${quoted(value)}`
-    : a.type === "regex" ? `Matches regex ${quoted(value)}` : a.type === "llmJudge" ? friendlyName(a.id) : `Condition: ${a.type}`;
-};
-// Static icon geometry copied from the approved board builder; never derived from resource text.
-const SVG_NS = "http://www.w3.org/2000/svg";
-const RING = ["circle", { cx: "12", cy: "12", r: "9" }];
-const ICONS = {
-  fail: [RING, ["path", { d: "M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6" }]],
-  pass: [RING, ["path", { d: "M8.2 12.4l2.6 2.6 5-5.4" }]],
-  error: [RING, ["path", { d: "M12 7.6v5.6" }], ["path", { d: "M12 16.4h.01" }]],
-  none: [["path", { d: "M8 12h8" }]],
-  running: [["path", { d: "M12 3a9 9 0 0 1 9 9" }]],
-  enter: [["path", { d: "M20 5v7a3 3 0 0 1-3 3H5" }], ["path", { d: "M9 11l-4 4 4 4" }]],
-  chevron: [["path", { d: "M9 6l6 6-6 6" }]],
-  back: [["path", { d: "M15 6l-6 6 6 6" }]],
-  plus: [["path", { d: "M12 5v14M5 12h14" }]],
-  more: [["circle", { cx: "5", cy: "12", r: "1" }], ["circle", { cx: "12", cy: "12", r: "1" }], ["circle", { cx: "19", cy: "12", r: "1" }]],
-  trash: [["path", { d: "M4 7h16" }], ["path", { d: "M10 11v6M14 11v6" }], ["path", { d: "M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" }], ["path", { d: "M9 7V4h6v3" }]],
-  sync: [["path", { d: "M21 12a9 9 0 0 1-15.5 6.2" }], ["path", { d: "M3 12A9 9 0 0 1 18.5 5.8" }], ["path", { d: "M18 2v4h-4" }], ["path", { d: "M6 22v-4h4" }]],
-  warn: [["path", { d: "M12 3.5l9.5 16.5h-19z" }], ["path", { d: "M12 10v4.5" }], ["path", { d: "M12 17.4h.01" }]],
-};
-function icon(doc, name, size, strokeWidth, className) {
-  const svg = doc.createElementNS(SVG_NS, "svg");
-  for (const [key, value] of Object.entries({ width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor",
-    "stroke-width": strokeWidth, "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false" })) {
-    svg.setAttribute(key, String(value));
-  }
-  if (className) svg.setAttribute("class", className);
-  for (const [tag, attrs] of ICONS[name]) {
-    const shape = doc.createElementNS(SVG_NS, tag);
-    for (const [key, value] of Object.entries(attrs)) shape.setAttribute(key, value);
-    svg.append(shape);
-  }
-  return svg;
-}
-function statusIcon(doc, kind, label) {
-  const base = kind.replace(/^old-/, "");
-  const mark = el(doc, "span", `status-icon ${kind}`);
-  mark.setAttribute("role", "img"); mark.setAttribute("aria-label", label); mark.setAttribute("title", label);
-  mark.append(icon(doc, base === "running" ? "running" : base, 14, 2.2, base === "running" ? "spin" : ""));
-  return mark;
-}
-
-// Expected/got wording uses only the actual excerpt. A differing reference is
-// named only when the answer holds exactly one same-anchored phrase, e.g. the
-// expected "Fixes #218" against an answer that literally says "Closes #218".
-const oneLine = (text, max = 80) => {
-  const flat = text.replace(/\s+/g, " ").trim(), chars = Array.from(flat);
-  return chars.length > max ? chars.slice(0, max - 1).join("") + "…" : flat;
-};
-export function provenActual(expected, excerpt) {
-  const m = /^(\S+)\s+(\S*\d\S*)$/.exec(expected ?? "");
-  if (!m || typeof excerpt !== "string") return;
-  const anchor = m[2].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const found = new Set();
-  for (const hit of excerpt.matchAll(new RegExp(`(?:^|\\s)(\\S+)\\s+${anchor}(?=$|[\\s.,;:!?)\\]])`, "g"))) {
-    const word = hit[1].replace(/^[^\p{L}\p{N}]+/u, "");
-    if (word) found.add(`${word} ${m[2]}`);
-  }
-  const [only] = found;
-  return found.size === 1 && only !== expected && excerpt.split(only).length === 2 ? only : undefined;
-}
-function failureFacts(c) {
-  for (const a of c.example.assertions) {
-    const got = c.expected?.get(checkKey(a)) === a ? c.checks?.get(checkKey(a)) : undefined;
-    if (got?.verdict !== "fail") continue;
-    const value = fieldValue(a), excerpt = c.row?.answerExcerpt;
-    const actual = a.type === "contains" ? provenActual(value, excerpt) : undefined;
-    const tail = actual !== undefined ? `, got ${quoted(actual)}` : typeof excerpt === "string" && excerpt.trim() ? `, got ${quoted(oneLine(excerpt))}` : "";
-    const text = a.type === "contains" ? `Expected ${quoted(value)}${tail}` : a.type === "notContains" ? `Expected no ${quoted(value)}${tail}`
-      : a.type === "regex" ? `Expected a match for ${quoted(value)}${tail}` : `Not met: ${checkLabel(a)}`;
-    return { assertion: a, text, actual, value };
-  }
-}
-
-// One line per authored test. A local edit keeps the known shape and count but
-// marks it old; missing, unselected or stale observations never become verdicts.
-function testRow(c, local, blocked, malformed = false) {
-  if (malformed) return { kind: "none", base: "none", label: "Incomplete", note: "Incomplete result", count: "incomplete" };
-  if (blocked) return { kind: "none", base: "none", label: "Result unconfirmed", note: "" };
-  if (!c) return { kind: "none", base: "none", label: "Not run", note: "", count: "" };
-  let base = "none", label = c.label, note = "", count = "";
-  if (c.state === "pass") [base, label, count] = ["pass", "Passed", "passing"];
-  else if (c.state === "fail") [base, label, note, count] = ["fail", "Failed", failureFacts(c)?.text || c.row?.reason || "Failed", "failing"];
-  // Only an observed unfinished row earns the amber "!"; ambiguous or uncovered complete rows stay neutral.
-  else if (c.state === "unknown" && c.row?.state !== undefined && c.row.state !== "complete") {
-    [base, label, count] = ["error", "Didn't finish", "didn't finish"];
-    note = `Didn't finish${c.row.reason ? `: ${c.row.reason}` : ""}`;
-  } else if (c.state === "unknown") [label, note, count] = ["Incomplete", "Incomplete result", "incomplete"];
-  else if (c.label === "Not in this run") [note, count] = [c.label, "not run"];
-  const old = local && base !== "none";
-  return { kind: old ? `old-${base}` : base, base, label: old ? `${label} last run` : label, note, count };
-}
-function coherentSelection(payload) {
-  const result = payload.latest.result;
-  if (!result) return false;
-  const selected = result.selection.caseIds, known = new Set(payload.examples.map((e) => e.id));
-  const observed = result.examples.map((e) => e.id);
-  return result.selection.totalCases === payload.examples.length && known.size === payload.examples.length
-    && new Set(selected).size === selected.length && selected.every((id) => known.has(id))
-    && new Set(observed).size === observed.length && observed.every((id) => selected.includes(id))
-    && ["full", "subset"].includes(result.selection.scope);
-}
-function ambiguousPassSet(payload) {
-  return payload.latest.status === "current" && !coherentSelection(payload)
-    && inspectCases(payload).every((c) => c.state === "pass");
-}
-function countText(rows) {
-  const counts = new Map();
-  for (const r of rows) counts.set(r.count, (counts.get(r.count) ?? 0) + 1);
-  return ["failing", "passing", "didn't finish", "incomplete", "not run"]
-    .filter((k) => counts.get(k)).map((k) => `${counts.get(k)} ${k}`).join(", ");
-}
-const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
-const modelText = (model) => model.match(/^model: (.+)$/m)?.[1] ?? model.replace(/\n/g, " · ");
+import { el, inlineText, editorValue, insertPlainText, fillEditor, purposeText, instructionsContent, runtimeModelControl, testNameControl, pathControls, icon, statusIcon,
+  checkKey, uniqueIndex, inspectCases, friendlyName, clone, same, operandKey, EDITABLE_TYPES, quoted, checkLabel, oneLine, failureFacts, testRow, coherentSelection, ambiguousPassSet, countText, plural, modelText, resultHistory, resultPill, modelLabel, growTextarea, checkTypeControl } from "./editor.mjs";
+export { provenActual } from "./editor.mjs";
 const CONFLICTS = ["revision_mismatch", "revision-mismatch"];
 const UNKNOWN = ["outcome-unknown", "uncertain-outcome", "uncertain_outcome"];
 const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/;
@@ -197,8 +38,10 @@ export function renderView(doc, root, payload, execute = postAction, options = {
   let base = payload, snap = readSnapshot(payload), candidate, compareOpen = false;
   const sectionDrafts = new Map(), testDrafts = new Map(), invalidEditors = new Set();
   let route = { name: "main" }, busy = false, pending, blocked = false, savedUntested = false, message = "", runAlert, lastRun;
-  let showContent = false, filter = "all", newCount = 0, menuOpen = false, cleanups = [], controls = [], includeNode;
+  let filter = "all", newCount = 0, menuOpen = false, cleanups = [], controls = [];
+  const history = resultHistory(payload), editingChecks = new Set();
   let refresh = () => {};
+  let focusTestName = false, nameHintKey, activeTestName;
   // A revision does not distinguish successive runs of unchanged source.
   let observationGeneration = 0;
   const modelChoice = runtimeModelSelection();
@@ -208,11 +51,12 @@ export function renderView(doc, root, payload, execute = postAction, options = {
   const editable = () => !!snap;
   const matches = (view) => view && !view.error && view.file?.path === payload.file.path;
   const hasDrafts = () => sectionDrafts.size > 0 || testDrafts.size > 0 || invalidEditors.size > 0;
+  const testing = () => busy && ["test", "save-and-test"].includes(pending?.operation);
   const rawExamples = () => snap ? base.authoring.examples : [];
   const sectionText = (key) => sectionDrafts.get(key) ?? snap.sections.find((s) => s.key === key).text;
   // Display rows and their unique raw join; ambiguous IDs stay visible but not editable.
   function entries() {
-    const cases = inspectCases(base), raws = uniqueIndex(rawExamples(), (e) => e.id), ids = uniqueIndex(base.examples, (e) => e.id);
+    const cases = history.cases(base), raws = uniqueIndex(rawExamples(), (e) => e.id), ids = uniqueIndex(base.examples, (e) => e.id);
     const list = cases.map((c) => {
       const raw = snap && ids.get(c.example.id) === c.example ? raws.get(c.example.id) : undefined;
       const key = raw ? `id:${raw.id}` : undefined, draft = key ? testDrafts.get(key) : undefined;
@@ -261,6 +105,7 @@ export function renderView(doc, root, payload, execute = postAction, options = {
   function adopt(view, submitted) {
     observationGeneration++;
     const renamed = route.name === "detail" && submitted.tests.includes(route.key) ? testDrafts.get(route.key)?.raw?.id : undefined;
+    history.remember(view); editingChecks.clear();
     base = modelChoice.view(view); snap = readSnapshot(base); candidate = undefined; compareOpen = false;
     for (const key of submitted.sections) sectionDrafts.delete(key);
     for (const key of submitted.tests) testDrafts.delete(key);
@@ -274,10 +119,9 @@ export function renderView(doc, root, payload, execute = postAction, options = {
     busy = true; pending = { operation, one: values.caseId !== undefined }; message = operation === "run" ? "Running…" : ""; runAlert = undefined; refresh();
     const action = { operation, ...values };
     if (!["reload", "suggest"].includes(operation)) action.expectedRevision = base.file.revision;
-    if (includeNode) showContent = includeNode.checked === true;
     const executing = ["save-and-test", "test", "run"].includes(operation);
     if (executing) {
-      action.showContent = showContent;
+      action.showContent = true;
       if (modelChoice.override) action.model = modelChoice.override;
     }
     let response;
@@ -346,6 +190,9 @@ export function renderView(doc, root, payload, execute = postAction, options = {
     if (!snap || busy || blocked || candidate || invalidEditors.size) return;
     const entry = entries().find((e) => e.key === key);
     if (!entry?.raw || entry.draft?.deleted) return;
+    if (entry.draft?.origin === null && !entry.draft.fixedId && !entry.draft.name.trim()) {
+      nameHintKey = key; message = ""; refresh(); activeTestName?.focus(); return;
+    }
     let intended = clone(rawExamples());
     if (entry.draft) {
       const raw = entry.draft.raw;
@@ -364,11 +211,13 @@ export function renderView(doc, root, payload, execute = postAction, options = {
   function observe(view, started = observation()) {
     if (started.generation !== observationGeneration || started.revision !== base.file.revision
       || !matches(view) || busy || blocked || invalidEditors.size) return false;
+    const observed = view;
     view = modelChoice.view(view);
     if (same(view, base) || (candidate && same(view, candidate))) return false;
     observationGeneration++;
     lastRun = undefined;
     if (view.file.revision === base.file.revision || !hasDrafts()) {
+      history.remember(observed);
       base = view; snap = readSnapshot(view); candidate = undefined; compareOpen = false;
       // A newly accepted run needs new result DOM; ordinary edits only refresh
       // its styling, leaving the focused input in place.
@@ -387,6 +236,7 @@ export function renderView(doc, root, payload, execute = postAction, options = {
     if (!candidate) return;
     observationGeneration++;
     sectionDrafts.clear(); testDrafts.clear(); invalidEditors.clear();
+    history.remember(candidate);
     base = candidate; snap = readSnapshot(base); candidate = undefined; compareOpen = false; lastRun = undefined;
     pruneDrafts(); message = "Using the new version. Your edits were discarded."; render();
   }
@@ -404,6 +254,7 @@ export function renderView(doc, root, payload, execute = postAction, options = {
       message = `Can't keep your edits automatically: the new version also has a test named ${quoted(clash.raw?.id ?? clash.origin)}. Compare, or use the new version.`;
       refresh(); return;
     }
+    history.remember(candidate);
     base = candidate; snap = next; candidate = undefined; compareOpen = false; lastRun = undefined;
     pruneDrafts(); message = "Kept your edits on top of the new version. Enter saves them."; render();
   }
@@ -432,7 +283,7 @@ export function renderView(doc, root, payload, execute = postAction, options = {
     for (const cleanup of cleanups.splice(0)) cleanup();
     invalidEditors.clear();
     const content = el(doc, "div", route.name === "detail" ? "content detail-view" : "content");
-    controls = []; includeNode = undefined;
+    controls = []; activeTestName = undefined;
     const button = (label, action, className = "", guard = "idle") => {
       const node = el(doc, "button", className, label); node.type = "button";
       node.addEventListener("click", action); controls.push({ node, guard }); return node;
@@ -464,6 +315,7 @@ export function renderView(doc, root, payload, execute = postAction, options = {
     content.append(...parts);
     root.replaceChildren(content);
     refresh();
+    if (focusTestName) { activeTestName?.focus(); focusTestName = false; }
   }
 
   function conflictNotice(button) {
@@ -500,7 +352,20 @@ export function renderView(doc, root, payload, execute = postAction, options = {
     return box;
   }
 
-  function header(button) {
+  function resultSummary() {
+    const n = entries().filter(e => !e.draft?.deleted).length, result = base.latest.result;
+    if (testing()) return { tone: "running", text: `Running ${pending.one ? "1 test" : plural(n, "test")}…` };
+    if (blocked) return { tone: "none", text: "Result unconfirmed" };
+    if (base.latest.status === "stale" || (hasDrafts() || base.latest.status !== "current") && history.last) return { tone: "none", text: "Out of date" };
+    if (!n || !result || result.reasonCode === "no_tests") return { tone: "none", text: "Not run yet" };
+    if (result.state !== "complete" || !coherentSelection(base)) return { tone: "error", text: result.state === "complete" ? "Incomplete run" : "Didn't finish" };
+    const cases = inspectCases(base), passing = cases.filter(c => c.state === "pass").length;
+    const full = result.fullPass && result.verdict === "pass" && result.selection.scope === "full" && passing === n;
+    if (!full && (passing === n || cases.some(c => c.state === "unknown"))) return { tone: "error", text: "Incomplete run" };
+    return { tone: full ? "pass" : cases.some(c => c.state === "fail") ? "fail" : "none", text: `${passing} of ${n} passing` };
+  }
+
+  function header(button, updates) {
     const displayName = base.title.split(" — ")[0] || base.title;
     // Quiet file name and model sit beside the title. Their disclosure keeps the
     // path, revision, other canonical sections and privacy controls available.
@@ -511,6 +376,7 @@ export function renderView(doc, root, payload, execute = postAction, options = {
     info.append(el(doc, "p", "source-title", base.title), pathControls(doc, base.file.path), el(doc, "code", "revision", base.file.revision));
     const head = el(doc, "header", "agent-header"), titleLine = el(doc, "div", "title-line");
     titleLine.append(el(doc, "h1", "", displayName), source);
+    const pill = resultPill(doc, resultSummary); titleLine.append(pill.node); updates.push(pill.update);
     if (snap) {
       modelControl.update(); controls.push({ node: modelControl.select, guard: "idle" }); titleLine.append(modelControl.node);
     }
@@ -570,7 +436,8 @@ export function renderView(doc, root, payload, execute = postAction, options = {
     if (blocked) return savedUntested ? "Saved · tests didn't run" : "Reload required · result unconfirmed";
     if (invalidEditors.size) return "Edited · unsupported formatting, reload before saving";
     if (candidate) return "Edited · settle the outside change before saving";
-    if (scope === "one") return "Enter saves and runs this test only";
+    if (scope === "one") return sectionDrafts.size || testDrafts.has(route.key)
+      ? "Enter saves and runs this test" : "Saved · Enter runs this test";
     if (!n) return hasDrafts() ? "Edited · Enter saves" : "Saved · add a test to run it";
     if (hasDrafts()) return `Edited · Enter saves and runs ${tests}`;
     if (runAlert?.saved && !runAlert.finished) return "Saved · tests didn't run";
@@ -591,7 +458,7 @@ export function renderView(doc, root, payload, execute = postAction, options = {
   }
 
   function mainView(button, status, updates) {
-    const { head, info } = header(button);
+    const { head, info } = header(button, updates);
     const promptSection = el(doc, "section", "prompt-section"), promptBox = el(doc, "div", "prompt-box");
     const promptLabel = el(doc, "h2", "lbl", "Prompt");
     const foot = el(doc, "div", "prompt-foot");
@@ -616,11 +483,6 @@ export function renderView(doc, root, payload, execute = postAction, options = {
   }
 
   function sourceActions(button, info, updates) {
-    const includeLabel = el(doc, "label", "include-answers"), include = el(doc, "input"); include.type = "checkbox"; include.checked = showContent;
-    include.addEventListener("change", () => { showContent = include.checked; });
-    includeLabel.append(include, doc.createTextNode("Include passing answers"));
-    updates.push(() => { include.disabled = busy || blocked; });
-    includeNode = include;
     const adHoc = base.latest.status === "current" ? base.latest.result?.adHoc : undefined;
     if (adHoc) {
       const result = el(doc, "section", "ad-hoc-result");
@@ -633,8 +495,7 @@ export function renderView(doc, root, payload, execute = postAction, options = {
     const box = el(doc, "div", "source-actions"), run = el(doc, "details", "run-disclosure");
     run.append(el(doc, "summary", "", "Try another input"), runInput, button("Run", () => act("run", { input: runInput.value }), "sb", "clean"));
     updates.push(() => { runInput.disabled = busy || blocked || hasDrafts(); });
-    box.append(includeLabel, el(doc, "small", "answer-disclosure quiet", "Failing answers are shown by default"), run,
-      button("Reload and discard draft", () => act("reload"), "tb", "reload"));
+    box.append(run, button("Reload and discard draft", () => act("reload"), "tb", "reload"));
     info.append(box);
   }
 
@@ -650,7 +511,8 @@ export function renderView(doc, root, payload, execute = postAction, options = {
 
   function testsSection(button, updates) {
     const section = el(doc, "section", "tests-section"), head = el(doc, "div", "tests-head"), title = el(doc, "div", "tests-title");
-    const summaryNode = el(doc, "span", "meta tests-summary"), list = el(doc, "ul", "test-list"), note = el(doc, "p", "filter-note");
+    const summaryNode = el(doc, "span", "sr-only tests-summary"), meta = el(doc, "span", "meta tests-meta");
+    const list = el(doc, "ul", "test-list"), note = el(doc, "p", "filter-note");
     title.append(el(doc, "h2", "lbl", "Tests"));
     const group = el(doc, "div", "filter-group"); group.setAttribute("role", "group"); group.setAttribute("aria-label", "Show tests");
     const filterButtons = ["all", "problems"].map((value) => {
@@ -658,7 +520,10 @@ export function renderView(doc, root, payload, execute = postAction, options = {
       node.addEventListener("click", () => { filter = value; draw(); refresh(); });
       group.append(node); return node;
     });
-    title.append(group, summaryNode); head.append(title);
+    summaryNode.setAttribute("role", "status");
+    const pill = resultPill(doc, resultSummary), firstRun = snap ? button("", submitAll, "tb first-run", "save") : undefined;
+    updates.push(pill.update);
+    title.append(group, pill.node, meta, summaryNode, ...(firstRun ? [firstRun] : [])); head.append(title);
     if (snap) {
       const actions = el(doc, "div", "tests-actions"), add = button("", addTest, "tb", "nav");
       const plus = el(doc, "span", "plus"); plus.append(icon(doc, "plus", 12, 2.6));
@@ -683,10 +548,11 @@ export function renderView(doc, root, payload, execute = postAction, options = {
     const rowControls = [];
     const draw = () => {
       for (const node of rowControls.splice(0)) if (controls.includes(node)) controls.splice(controls.indexOf(node), 1);
-      const all = entries(), anyDraft = hasDrafts();
-      const shown = all.map((e) => ({ e, r: e.draft?.origin === null ? { kind: "none", base: "none", label: "Not run", note: "", count: "" } : testRow(e.c, anyDraft, blocked, ambiguousPassSet(base)) }));
+      const all = entries(), anyDraft = hasDrafts(), oldResults = anyDraft || testing() || base.latest.status !== "current";
+      const shown = all.map((e) => ({ e, r: e.draft?.origin === null ? { kind: "none", base: "none", label: "Not run", note: "", count: "" } : testRow(e.c, oldResults || e.c?.previous, blocked, ambiguousPassSet(base)) }));
       const counted = shown.filter(({ e }) => !e.draft?.deleted);
-      const notPassing = counted.filter(({ r }) => r.base !== "pass").length;
+      const currentPass = ({ e, r }) => r.base === "pass" && !e.c?.previous;
+      const notPassing = counted.filter(row => !currentPass(row)).length;
       filterButtons.forEach((node, i) => {
         node.replaceChildren(`${i ? "Not passing" : "All"} `, el(doc, "span", "count", String(i ? notPassing : counted.length)));
         node.setAttribute("aria-pressed", String(filter === (i ? "problems" : "all")));
@@ -696,7 +562,7 @@ export function renderView(doc, root, payload, execute = postAction, options = {
       for (const { e, r } of shown) {
         const item = el(doc, "li", "test-item"), id = e.raw?.id ?? e.c?.example.id ?? "";
         item.setAttribute("data-test-id", id); item.setAttribute("data-status", r.kind);
-        item.hidden = filter === "problems" && r.base === "pass" && !e.draft; hidden += Number(item.hidden);
+        item.hidden = filter === "problems" && currentPass({ e, r }) && !e.draft; hidden += Number(item.hidden);
         if (e.draft?.deleted) {
           item.className += " deleted";
           const row = el(doc, "div", "test-row");
@@ -708,8 +574,14 @@ export function renderView(doc, root, payload, execute = postAction, options = {
         const open = e.openable ? button("", () => { route = { name: "detail", key: e.key ?? `view:${id}` }; menuOpen = false; render(); }, "test-row", "nav") : el(doc, "div", "test-row");
         if (e.openable) rowControls.push(controls[controls.length - 1]);
         const noteText = e.draft ? "Unsaved" + (r.note ? ` · ${r.note}` : "") : r.note;
-        open.append(statusIcon(doc, r.kind, r.label), el(doc, "span", "test-name", draftName(e)), el(doc, "span", e.draft ? "test-note unsaved" : "test-note", noteText));
-        if (e.openable) { const chevron = el(doc, "span", "chevron"); chevron.append(icon(doc, "chevron", 14, 2)); open.append(chevron); }
+        const example = e.c?.example, summary = example ? `${oneLine(example.input, 64)} → ${example.assertions.map(checkLabel).join(" · ")}` : "";
+        const word = r.base === "pass" ? "Passed" : r.base === "fail" ? "Failed" : r.base === "error" ? "Didn't finish" : r.label === "No current result" || r.label === "Out of date" && history.last ? "Not run yet" : r.label;
+        const verdict = el(doc, "span", `test-verdict ${r.kind}`);
+        verdict.append(el(doc, "span", "verdict-word", word));
+        if (r.kind.startsWith("old-")) verdict.append(el(doc, "span", "sr-only verdict-context", " last run"));
+        open.append(el(doc, "span", "test-name", draftName(e)), el(doc, "span", "test-input-summary", summary), verdict);
+        const line = el(doc, "span", e.draft ? "test-note unsaved" : "test-note", noteText); line.hidden = !noteText;
+        open.append(line);
         item.append(open); list.append(item);
       }
       if (hidden) {
@@ -719,12 +591,22 @@ export function renderView(doc, root, payload, execute = postAction, options = {
       }
       empty.hidden = !snap || shown.length > 0;
       list.hidden = shown.length === 0;
-      const text = countText(counted.map(({ r }) => r));
+      const text = countText(counted.map(({ e, r }) => base.latest.status === "current" && e.c?.previous ? { count: "not run" } : r));
       const malformed = !!base.latest.result && !coherentSelection(base);
-      summaryNode.textContent = blocked ? "Result unconfirmed" : !shown.length ? "" : busy && ["test", "save-and-test"].includes(pending?.operation) ? "Running…"
-        : base.latest.status === "stale" ? "Result out of date" : base.latest.status !== "current" || !text ? "Not run yet"
+      const stale = base.latest.status === "stale" || (anyDraft || base.latest.status !== "current") && !!history.last;
+      const previous = modelLabel(history.last?.latest.result.modelRoute);
+      const accessible = blocked ? "Result unconfirmed" : !shown.length ? "" : testing() ? "Running…"
+        : stale && base.latest.status !== "current" ? `Out of date${previous ? ` · last run on ${previous}` : ""}` : base.latest.status !== "current" || !text ? "Not run yet"
         : (base.latest.result.state !== "complete" || malformed) && !anyDraft && !/didn't finish|incomplete/.test(text) ? `Incomplete run: ${text}`
         : anyDraft ? `Last run, before your edit: ${text}` : lastRun && !lastRun.one && !runAlert ? `${text} · just now` : text;
+      // A live region needs changed text, not only a changed accessible name.
+      if (summaryNode.textContent !== accessible) summaryNode.textContent = accessible;
+      meta.textContent = stale ? `Out of date${previous ? ` · last run on ${previous}` : ""}` : !busy && lastRun && !runAlert ? "· just now" : "";
+      if (firstRun) {
+        firstRun.hidden = !counted.length || blocked || busy || !!history.last || base.latest.status === "stale";
+        firstRun.textContent = `Run ${plural(counted.length, "test")}`;
+      }
+      pill.node.hidden = firstRun && !firstRun.hidden || stale || !counted.length;
       fitFilter();
     };
     // The filter appears only when the list doesn't fit on screen (or is in use).
@@ -772,7 +654,7 @@ export function renderView(doc, root, payload, execute = postAction, options = {
     if (localExamples().length >= 128) { message = "Keep at most 128 tests. Edit or delete an existing test first."; refresh(); return; }
     const key = `new:${++newCount}`;
     testDrafts.set(key, { origin: null, name: "", raw: { id: "", input: "", assertions: [{ id: "check-1", type: "contains", value: "" }] } });
-    route = { name: "detail", key }; render();
+    route = { name: "detail", key }; focusTestName = true; render();
   }
 
   // `actual` is a proven unique substring of the excerpt; it is marked, never rewritten.
@@ -780,9 +662,7 @@ export function renderView(doc, root, payload, execute = postAction, options = {
     if (row.answerExcerpt === undefined) return el(doc, "p", "quiet", "Answer content not included.");
     const box = el(doc, "div", "answer");
     const truncated = row.truncated || /…\s*\[truncated\]$/.test(row.answerExcerpt ?? "");
-    const label = el(doc, "span", "label");
-    updates.push(() => { label.textContent = `Untrusted excerpt, shown as text${truncated ? " (truncated)" : ""}${local() ? " · last run" : ""}`; });
-    box.append(label);
+    if (truncated) box.append(el(doc, "span", "label", "Answer truncated"));
     const pre = el(doc, "pre", "answer-excerpt", actual === undefined ? row.answerExcerpt : undefined);
     if (actual !== undefined) {
       const [before, after] = row.answerExcerpt.split(actual);
@@ -798,7 +678,7 @@ export function renderView(doc, root, payload, execute = postAction, options = {
     const entry = entries().find((e) => (e.key ?? `view:${e.c?.example.id}`) === route.key);
     if (!entry) { route = { name: "main" }; return mainView(button, status, updates); }
     const key = entry.key, editableTest = !!snap && !!key, c = entry.c, draft = () => key ? testDrafts.get(key) : undefined;
-    const local = hasDrafts;
+    const local = () => hasDrafts() || testing() || base.latest.status !== "current" || c?.previous === true;
     const current = () => draft()?.raw ?? entry.raw;
     const mutate = (fn) => {
       const d = draft() ?? { origin: entry.origin.id, raw: clone(entry.origin) };
@@ -810,17 +690,17 @@ export function renderView(doc, root, payload, execute = postAction, options = {
     const back = button("", () => { route = { name: "main" }; menuOpen = false; render(); }, "back", "nav");
     back.setAttribute("aria-label", "Back to tests"); back.append(icon(doc, "back", 14, 2), "Tests");
     bar.append(back);
-    if (editableTest) {
+    if (editableTest && draft()?.origin !== null) {
       const more = button("", () => { menuOpen = !menuOpen; render(); }, "ib more", "nav");
-      more.setAttribute("aria-label", "More actions"); more.setAttribute("aria-haspopup", "menu"); more.setAttribute("aria-expanded", String(menuOpen));
-      more.setAttribute("title", "More actions"); more.append(icon(doc, "more", 15, 2.6));
+      more.setAttribute("aria-label", "More actions: Delete test"); more.setAttribute("aria-haspopup", "menu"); more.setAttribute("aria-expanded", String(menuOpen));
+      more.setAttribute("title", "More actions: Delete test"); more.append(icon(doc, "more", 15, 2.6));
       bar.append(more);
       if (menuOpen) {
         const menu = el(doc, "div", "menu"); menu.setAttribute("role", "menu"); menu.setAttribute("aria-label", "More actions");
         const duplicate = button("Duplicate test", () => {
           const copy = clone(current()), name = `${draftName(entry)} copy`; copy.id = portableId(name);
           const newKey = `new:${++newCount}`; testDrafts.set(newKey, { origin: null, name, raw: copy });
-          route = { name: "detail", key: newKey }; menuOpen = false; render();
+          route = { name: "detail", key: newKey }; menuOpen = false; focusTestName = true; render();
         }, "mi");
         const remove = button("Delete test", () => {
           if (entry.origin) testDrafts.set(key, { origin: entry.origin.id, raw: null, deleted: true }); else testDrafts.delete(key);
@@ -831,40 +711,49 @@ export function renderView(doc, root, payload, execute = postAction, options = {
       }
     }
     const nameLine = el(doc, "div", "name-line");
+    let nameHint;
     if (editableTest && draft()?.origin === null) {
-      const name = el(doc, "input", "test-title-input"); name.type = "text"; name.value = draft().name;
-      name.setAttribute("aria-label", "Test name"); name.setAttribute("placeholder", "Name this test"); name.setAttribute("spellcheck", "false");
-      name.addEventListener("input", () => { draft().name = name.value; draft().raw.id = portableId(name.value); refresh(); });
-      fieldKeys(name); updates.push(() => { name.disabled = busy || blocked; });
-      nameLine.append(name);
+      const control = testNameControl(doc,
+        () => ({ name: draft().name, disabled: busy || blocked, invalid: nameHintKey === key }), value => {
+          draft().name = value; draft().raw.id = portableId(value);
+          if (value.trim()) nameHintKey = undefined;
+          refresh();
+        });
+      activeTestName = control.input; nameHint = control.hint;
+      fieldKeys(control.input); updates.push(control.update); nameLine.append(control.input);
     } else nameLine.append(el(doc, "h1", "test-title", draftName(entry)));
     const unsaved = el(doc, "span", "unsaved-tag", "Unsaved");
     nameLine.append(unsaved);
     const resultLine = el(doc, "span", "meta detail-status");
     updates.push(() => {
-      unsaved.hidden = !draft();
-      const r = c ? inspectFor(c) : undefined;
-      resultLine.textContent = draft()?.origin === null ? "Not run yet" : !r ? "Not run yet" : r;
+      unsaved.hidden = !draft() || draft().origin === null;
+      const r = c ? inspectFor(c) : "Not run yet";
+      const [word, ...context] = (draft()?.origin === null ? "" : r).split(" · ");
+      resultLine.replaceChildren(el(doc, "span", "result-word", word), el(doc, "span", "detail-result-meta", context.length ? ` · ${context.join(" · ")}` : ""));
+      resultLine.setAttribute("data-tone", local() ? "old" : c?.state ?? "none");
+      resultLine.setAttribute("data-result", c?.state ?? "none");
     });
     function inspectFor(caseInfo) {
       if (blocked) return "Result unconfirmed";
-      if (base.latest.status === "stale") return "Result out of date";
-      if (base.latest.status !== "current") return "Not run yet";
+      if (testing()) return "Tests running…";
       if (caseInfo.label === "Not in this run") return "Not in the last run";
-      if (local()) return "Results from the last run, before your edit";
-      return lastRun && !runAlert ? "Results from the last run, just now" : "Results from the last run";
+      if (!["pass", "fail"].includes(caseInfo.state)) return caseInfo.row ? caseInfo.label : base.latest.status === "stale" && !history.last ? "Out of date" : "Not run yet";
+      const model = modelLabel(caseInfo.previous ? caseInfo.previousModel : base.latest.result?.modelRoute);
+      const when = local() ? caseInfo.previous ? "Out of date · last run" : "before your edit" : lastRun && !runAlert ? "just now" : "last run";
+      return `${caseInfo.state === "pass" ? "Passed" : "Failed"} · ${when}${model ? ` on ${model}` : ""}`;
     }
-    top.append(bar, nameLine, resultLine);
+    top.append(bar, nameLine, ...(nameHint ? [nameHint] : []), resultLine);
     out.push(top);
 
     // The agent gets
     const gets = el(doc, "section", "detail-section");
     if (editableTest) {
       const label = el(doc, "label", "lbl", "The agent gets"), input = el(doc, "textarea", "field example-input");
-      input.value = current().input; input.rows = 2; input.setAttribute("spellcheck", "false");
+      input.value = current().input; input.rows = 3; input.setAttribute("spellcheck", "false");
+      input.setAttribute("placeholder", 'What the agent is given, e.g. Merged: "Fix slow search", closes #218');
       label.append(input);
       input.addEventListener("input", () => mutate((d) => { d.raw.input = input.value; }));
-      fieldKeys(input); updates.push(() => { input.disabled = busy || blocked; });
+      fieldKeys(input); updates.push(() => { input.disabled = busy || blocked; growTextarea(input); });
       gets.append(label);
     } else gets.append(el(doc, "h2", "lbl", "The agent gets"), el(doc, "pre", "example-input literal", c.example.input));
     out.push(gets);
@@ -879,7 +768,7 @@ export function renderView(doc, root, payload, execute = postAction, options = {
     assertions.forEach((a, index) => {
       const display = editableTest ? displayChecks.get(checkKey(a)) : a;
       const observed = display && c?.expected?.get(checkKey(display)) === display ? c.checks?.get(checkKey(display)) : undefined;
-      const row = el(doc, "div", "check"), state = el(doc, "span", "check-state");
+      const row = el(doc, "div", "check"), state = el(doc, "span", "check-state"), verdict = el(doc, "span", "check-verdict");
       updates.push(() => {
         let kind = "none", label = "No result";
         const completed = !ambiguousPassSet(base) && (c?.state === "pass" || c?.state === "fail");
@@ -887,23 +776,36 @@ export function renderView(doc, root, payload, execute = postAction, options = {
         else if (completed && !blocked && draft()?.origin !== null && observed?.verdict === "fail") [kind, label] = ["fail", "Failed"];
         if (kind !== "none" && local()) [kind, label] = [`old-${kind}`, `${label} last run`];
         state.replaceChildren(statusIcon(doc, kind, label));
+        verdict.textContent = kind === "none" ? "" : observed.verdict === "pass" ? "Passed" : "Failed";
+        verdict.setAttribute("data-tone", kind);
       });
-      row.append(state);
       const known = editableTest && EDITABLE_TYPES.some(([t]) => t === a.type);
       if (known) {
-        const select = el(doc, "select", "token"); select.setAttribute("aria-label", `Check ${index + 1} type`);
-        for (const [type, text] of EDITABLE_TYPES) { const option = el(doc, "option", "", text); option.value = type; select.append(option); }
-        select.value = a.type;
+        const editKey = `${key}/${a.id}`, edit = el(doc, "div", "check-edit");
+        let type = a.type;
         const value = el(doc, "input", "field check-value"); value.type = "text"; value.value = a[operandKey(a.type)] ?? "";
         value.setAttribute("aria-label", `Check ${index + 1} text`); value.setAttribute("spellcheck", "false");
-        const apply = () => mutate((d) => {
-          const target = d.raw.assertions[index], oldKey = operandKey(target.type), newKey = operandKey(select.value);
-          if (oldKey !== newKey) delete target[oldKey];
-          target.type = select.value; target[newKey] = value.value;
+        const line = button("", () => { editingChecks.add(editKey); refresh(); value.focus(); }, "check-line");
+        line.append(state, el(doc, "span", "check-label", checkLabel({ type: a.type, fields: [[operandKey(a.type), value.value]] })));
+        const apply = () => {
+          editingChecks.add(editKey);
+          mutate(d => {
+            const target = d.raw.assertions[index], oldKey = operandKey(target.type), newKey = operandKey(type);
+            if (oldKey !== newKey) delete target[oldKey];
+            target.type = type; target[newKey] = value.value;
+          });
+        };
+        const choice = checkTypeControl(doc, type, chosen => { type = chosen; apply(); }, cancelDraft);
+        value.addEventListener("input", apply); fieldKeys(value);
+        const remove = button("", () => { mutate(d => { d.raw.assertions.splice(index, 1); }); render(); }, "ib remove-check");
+        remove.setAttribute("aria-label", `Remove check ${index + 1}`); remove.append(icon(doc, "none", 14, 2));
+        edit.append(remove, choice.node, value, verdict); row.append(line, edit);
+        updates.push(() => {
+          const editing = draft()?.origin === null || editingChecks.has(editKey);
+          line.hidden = editing; edit.hidden = !editing;
+          value.disabled = busy || blocked; choice.update(busy || blocked);
+          value.setAttribute("placeholder", type === "contains" ? "Text the answer must contain" : type === "notContains" ? "Text the answer must not contain" : "Pattern the answer must match");
         });
-        select.addEventListener("change", apply); value.addEventListener("input", apply); fieldKeys(value);
-        updates.push(() => { select.disabled = value.disabled = busy || blocked; });
-        row.append(select, value);
       } else {
         const body = el(doc, "div", "check-readonly");
         const shown = display ?? { id: a.id, type: a.type, fields: Object.entries(a).filter(([k]) => k !== "id" && k !== "type").map(([k, v]) => [k, typeof v === "string" ? v : JSON.stringify(v)]) };
@@ -915,22 +817,23 @@ export function renderView(doc, root, payload, execute = postAction, options = {
           if (shown.type === "llmJudge" && k === "rubric") { line.append(`${k}: `); inlineText(doc, line, v); } else line.textContent = `${k}: ${v}`;
           details.append(line);
         }
-        body.append(details); row.append(body);
+        body.append(details); row.append(state, body);
       }
-      if (editableTest) {
+      if (editableTest && !known) {
         const remove = button("", () => { mutate((d) => { d.raw.assertions.splice(index, 1); }); render(); }, "ib remove-check");
         remove.setAttribute("aria-label", `Remove check ${index + 1}`); remove.setAttribute("title", "Remove check");
         remove.append(icon(doc, "trash", 14, 2)); row.append(remove);
       }
       checks.append(row);
-      if (facts && display === facts.assertion) {
+      const checkFacts = display && c && !blocked && draft()?.origin !== null ? failureFacts(c, display) : undefined;
+      if (checkFacts) {
         // Repairs belong to the saved assertion they explain, not a later type
         // or operand occupying the same input. Recheck even detached handlers.
         const eligible = () => {
           const now = current().assertions[index];
-          return now?.id === facts.assertion.id && now.type === facts.assertion.type && now[operandKey(now.type)] === facts.value;
+          return now?.id === checkFacts.assertion.id && now.type === checkFacts.assertion.type && now[operandKey(now.type)] === checkFacts.value;
         };
-        checks.append(explanation(button, facts, local, editableTest ? index : -1, mutate, eligible, updates));
+        checks.append(explanation(button, checkFacts, local, editableTest ? index : -1, mutate, eligible, updates));
       }
     });
     checksSection.append(checks);
@@ -938,7 +841,9 @@ export function renderView(doc, root, payload, execute = postAction, options = {
       const add = button("", () => {
         mutate((d) => {
           const ids = new Set(d.raw.assertions.map((a) => a.id)); let i = 1; while (ids.has(`check-${i}`)) i++;
-          if (d.raw.assertions.length < 64) d.raw.assertions.push({ id: `check-${i}`, type: "contains", value: "" });
+          if (d.raw.assertions.length < 64) {
+            d.raw.assertions.push({ id: `check-${i}`, type: "contains", value: "" }); editingChecks.add(`${key}/check-${i}`);
+          }
         });
         render();
       }, "tb add-check");
@@ -959,7 +864,7 @@ export function renderView(doc, root, payload, execute = postAction, options = {
         answered.append(el(doc, "p", "answer-error", `No answer${c.row.reason ? `: ${c.row.reason}` : ""}`));
       } else {
         answered.append(el(doc, "p", "quiet", c.state === "pass"
-          ? "Answer content not included for passing tests. Turn on Include passing answers in the source details, then run this test."
+          ? "Run this test to see its answer."
           : "Answer content not included. Run this test again to see it."));
       }
       out.push(answered);
@@ -971,7 +876,8 @@ export function renderView(doc, root, payload, execute = postAction, options = {
       const foot = el(doc, "div", "detail-foot");
       foot.append(spinnerStatus(status, "one", updates));
       const right = el(doc, "div", "foot-actions");
-      const cancel = button("Cancel", cancelDraft, "tb tb-quiet", "nav");
+      const cancel = button("", cancelDraft, "ib cancel-test", "nav");
+      cancel.setAttribute("aria-label", "Cancel"); cancel.append(icon(doc, "close", 16, 2.2));
       cancel.setAttribute("title", "Discard this test's edits (Esc)");
       updates.push(() => { cancel.hidden = !draft(); });
       right.append(cancel, saveButton(button, "Save and run this test", () => submitOne(key)));
@@ -981,9 +887,10 @@ export function renderView(doc, root, payload, execute = postAction, options = {
       updates.push(() => { status.textContent = snap ? "This test can't be edited here: its name isn't unique." : footText(); });
     }
     function cancelDraft() {
-      const d = draft(); if (!d) return;
+      const d = draft();
       testDrafts.delete(key);
-      if (d.origin === null) route = { name: "main" };
+      for (const id of editingChecks) if (id.startsWith(`${key}/`)) editingChecks.delete(id);
+      if (d?.origin === null) route = { name: "main" };
       render();
     }
     function fieldKeys(node) {
@@ -999,7 +906,7 @@ export function renderView(doc, root, payload, execute = postAction, options = {
   function explanation(button, facts, local, index, mutate, eligible, updates) {
     const box = el(doc, "div", "why");
     updates.push(() => { box.className = local() ? "why old" : "why"; });
-    box.append(el(doc, "span", "why-text", `${facts.text}.`));
+    box.append(el(doc, "span", "why-text", facts.text));
     if (facts.actual !== undefined && index >= 0) {
       const actions = el(doc, "div", "why-actions");
       const prompt = snap ? sectionText(snap.main.key) : "";
