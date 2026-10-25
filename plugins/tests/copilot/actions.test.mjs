@@ -30,6 +30,19 @@ function harness({omitModel=false,fixture=original}={}){
  }}},send:async prompt=>{calls.push({chat:prompt})}};
  return{o,session,calls,raw,source:()=>source,setRace:()=>{race=true},setDenied:()=>{denied=true},setUnavailable:()=>{unavailable=true},hold:()=>{release={};return()=>release.resolve()},act:createActionHandler({session,path:'greeter.agent.md'})};
 }
+test('runtime reads existing tool declarations without adding a tool editor', async()=>{
+ const h=harness({fixture:original.replace('## Examples','## Tools\n- ping\n\n## Examples')});
+ const read=h.session.rpc.mcp.resources.read;
+ h.session.rpc.mcp.resources.read=async args=>{const result=await read(args);const raw=JSON.parse(result.contents[0].text);raw.tools=['ping'];result.contents[0].text=JSON.stringify(raw);return result};
+ const view=await readView(h.session,'greeter.agent.md');
+ assert.deepEqual(view.tools,['ping']);assert.equal(view.authoring?.editable,true);
+ const changed=replaceInstructions(view.authoring.source,[{key:'Non-Responsibilities',text:'No extra calls.'}]);
+ assert.match(changed,/## Tools\n- ping\n\n## Examples/);
+ const result=await h.act({operation:'test',expectedRevision:revision(h.source())});
+ assert.equal(result.error,undefined,'missing bridge API keeps existing native unbound path; no alternative endpoint');
+ assert.equal(h.calls.at(-1).name,'owned-test');
+});
+
 function deferred(){let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no});return{promise,resolve,reject}}
 function nativeHarness(){
  const h=harness(),listeners=new Set(),retired=[],requests=[],gate=deferred(),ack=deferred(),aborts=[],dispatched=deferred();

@@ -25,10 +25,16 @@ type mcpOutput struct{ io.Writer }
 func (mcpOutput) Close() error { return nil }
 
 func newMCPCommand(state *commandState) *cobra.Command {
-	var root, provider, endpoint, squadProgram, squadRelease string
+	var root, provider, endpoint, squadProgram, squadRelease, hostBridgePublicKey, hostBridgeRequest string
 	var clearHistory bool
 	cmd := &cobra.Command{Use: "mcp [--root DIRECTORY]", Short: "Serve Create/Edit/Run/Test over local stdio MCP", Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			if cmd.Flag("host-bridge-request").Changed {
+				if cmd.Flag("host-bridge-public-key").Changed || state.deps.stdin == nil {
+					return errors.New("host tools unavailable")
+				}
+				return kmxmcp.ProxyHostRequest(cmd.Context(), hostBridgeRequest, state.deps.stdin, cmd.OutOrStdout())
+			}
 			if state.contextFlag != "" || cmd.Flag("container-engine").Changed {
 				return fmt.Errorf("MCP refuses cluster/container selectors")
 			}
@@ -63,7 +69,22 @@ func newMCPCommand(state *commandState) *cobra.Command {
 			if state.deps.stdin == nil {
 				return fmt.Errorf("MCP requires protocol stdin")
 			}
+			ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
+			defer stop()
 			application := &app.App{FileRunner: state.deps.fileRunner}
+			var bridge *kmxmcp.HostBridge
+			if cmd.Flag("host-bridge-public-key").Changed {
+				bridge, err = kmxmcp.OpenHostBridge(ctx, hostBridgePublicKey)
+				if err != nil {
+					return err
+				}
+				defer bridge.Close()
+				application.FileRunner = app.NewHostFileRunner(bridge.ResolveTools)
+			}
+			hostRuntime, err := kmxmcp.NewHostRuntime(root, provider, endpoint, bridge)
+			if err != nil && bridge != nil {
+				return err
+			}
 			operations := kmxmcp.Operations(files, application, route)
 			var squad *kmxmcp.SquadCreator
 			if squadProgram != "" || squadRelease != "" {
@@ -82,6 +103,9 @@ func newMCPCommand(state *commandState) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if hostRuntime != nil {
+				kmxmcp.AddHostRuntimeResource(server, hostRuntime)
+			}
 			kmxmcp.AddAgentResource(server, files)
 			if route == nil && root == "" || route != nil && route.Provider == "copilot" {
 				kmxmcp.AddModelResource(server, func(ctx context.Context) ([]modelaccess.Route, error) {
@@ -92,8 +116,6 @@ func newMCPCommand(state *commandState) *cobra.Command {
 			if squad != nil {
 				kmxmcp.AddSquadResource(server, squad)
 			}
-			ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
-			defer stop()
 			if err := kmxmcp.Serve(ctx, server, state.deps.stdin, mcpOutput{cmd.OutOrStdout()}); err != nil {
 				if ctx.Err() != nil || errors.Is(err, io.EOF) {
 					return nil
@@ -102,13 +124,17 @@ func newMCPCommand(state *commandState) *cobra.Command {
 			}
 			return nil
 		}}
+	cmd.Flags().StringVar(&hostBridgeRequest, "host-bridge-request", "", "forward one signed request to the trusted host broker, then exit")
+	_ = cmd.Flags().MarkHidden("host-bridge-request")
+	cmd.Flags().StringVar(&hostBridgePublicKey, "host-bridge-public-key", "", "trusted session-only runtime signing public key")
+	_ = cmd.Flags().MarkHidden("host-bridge-public-key")
 	cmd.Flags().StringVar(&root, "root", "", "optional absolute existing operation root for legacy clients; otherwise agent paths resolve against cwd")
 	cmd.Flags().StringVar(&provider, "provider", "", "trusted startup model provider; unbound non-fake agents default to copilot (not selectable through tools)")
 	cmd.Flags().StringVar(&endpoint, "endpoint", "", "trusted startup model endpoint (fixed for Copilot; never read from charter text)")
 	cmd.Flags().StringVar(&squadProgram, "squad-program", "", "trusted absolute qualified standalone Squad launcher; enables native targets, never installs")
 	cmd.Flags().StringVar(&squadRelease, "squad-release", "", "explicit qualified native Squad release (1.1.0); requires --squad-program")
 	cmd.Flags().BoolVar(&clearHistory, "clear-history", false, "clear retained source history for --root, then exit; does not start MCP or touch current files")
-	for _, name := range []string{"provider", "endpoint", "squad-program", "squad-release"} {
+	for _, name := range []string{"provider", "endpoint", "squad-program", "squad-release", "host-bridge-public-key"} {
 		cmd.MarkFlagsMutuallyExclusive("clear-history", name)
 	}
 	return cmd

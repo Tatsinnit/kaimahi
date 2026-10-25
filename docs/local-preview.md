@@ -19,8 +19,9 @@ cancellation stops later samples and examples; start a new preview to establish
 fresh credentials. Logging out in another kmx process does not revoke this
 in-memory snapshot or stop a running preview; cancel that preview explicitly.
 It ends within the five-minute invocation bound. Ordinary model listing and
-non-preview access keep their existing refresh behavior. Declared tools with either a Copilot agent or a
-Copilot judge still refuse before authentication or journal creation.
+non-preview access keep their existing refresh behavior. Unbound Copilot agent
+tools refuse before authentication or journal creation; explicitly bound agent
+tools are supported. Judges remain tool-free.
 Enabled Copilot models may use Chat Completions or Responses; the provider
 captures the catalog-selected protocol with the credential snapshot. The same
 path is retained while the catalog still advertises it; disappearance aborts,
@@ -60,7 +61,8 @@ Name the variable; never put the credential value on the command line.
   zero model calls. If it doesn't, the example is not a pass.
 - Instructions are the agent file's prefix before Examples, sent as the system
   prompt. The example input is sent as the user message. Each example gets one
-  model request. There are no retries, no fallback model and no tool execution.
+  model request when tool-free. A bound tool case permits one tool call and one
+  follow-up model send. There are no retries or fallback models.
   Cancellation and the per-example deadline (default 2 minutes, which also
   covers judging) stop the request in flight.
 
@@ -71,7 +73,7 @@ The optional [Tools declaration](agent-file.md#markdown-contract) names
 for one real read-only GitHub MCP operation, without discovery or workspace
 configuration. Missing bindings or credentials refuse `tools_unavailable`;
 neither CLI nor inbound MCP silently executes declarations as tool-free agents.
-Inbound MCP still has no operator binding selector and cannot grant tools.
+Default inbound MCP remains unbound; tool input cannot supply a binding.
 Bound tools support local, fake and Copilot Chat Completions/Responses routes;
 judging remains tool-free. Copilot checks current tool capability before each
 model send. Responses reasoning/continuation items stay invocation-private and
@@ -84,8 +86,44 @@ match the selected host schema and stay within 8 KiB; results stay within 32 KiB
 One case still executes at most one tool call and two agent model sends.
 Safe definitions are journaled to reconstruct the exact request during zero-call
 offline replay; endpoint/binding credentials are not. Old fixed-read journals
-remain inspectable. There is no general CLI binding-file format or canvas server
-binding in this slice; the explicit CLI binding below remains the fixed read.
+remain inspectable. There is no general CLI binding-file format; the explicit
+CLI binding below remains the fixed read. Copilot's runtime-owned binding is
+separate and requires no hand-edited file.
+
+## Copilot host tools
+
+With a capable Copilot SDK host, the extension runtime binds names to its actual
+currently offered MCP tools and their input schemas. Match the server's raw tool
+name exactly. Multiple offered servers with the same name, missing/deferred
+schemas, tools from the original kmx server or this preview child, and non-MCP
+command/builtin tools refuse; nothing is silently loaded or selected. These two
+server identities are excluded, not every separately configured kmx alias. The binding is frozen per invocation and checked
+again before native execution. The native `tools.execute` pipeline still owns
+permission decisions; kmx adds no approval handler or retry.
+
+The runtime starts a session-only kmx preview MCP process, preserving the
+original server's checked root/provider/endpoint/cwd. Its Run/Test tools are
+model-callable, not hidden authorizations; canvas UI is unchanged. Edit stays
+on the original server; preview observations are read from the executing child.
+Closing a canvas keeps the session-owned child, so reopening cannot revive the
+original process's older result. Runtime/session teardown stops it and remains
+unavailable rather than falling back. Windows-to-WSL uses the trusted kmx binary
+to pipe one signed request/response; Windows localhost forwarding is not needed.
+Immediately before native dispatch, a signed one-shot claim checks that the Go
+call is still pending and its context is live. Cancellation or expiry completed
+before this dispatch commitment refuses without starting the native operation.
+After commitment, the delegated operation may finish after cancellation. A native
+permission wait can also outlast the 30-second relay call; kmx cannot cancel that
+already-committed host operation. Its journal stays incomplete, late results are discarded, and
+nothing is retried. A waiting native call serializes the relay until it finishes.
+
+Only ephemeral public signing keys appear in startup/discovery. Private keys
+stay in memory, and signed requests/responses bind exact bytes and fresh nonces.
+No app configuration or credential is copied, no new binding file is read, and
+no endpoint/token can come from authored source or Run/Test arguments. The
+original server/preferences are unchanged. Unsupported SDK/startup/platform
+combinations retain the plain unavailable/unbound reason. These are runtime
+contracts, not a claim of qualification for every installed host or tool.
 
 The strict local JSON binding is at most 16 KiB and contains references, never
 credential values:

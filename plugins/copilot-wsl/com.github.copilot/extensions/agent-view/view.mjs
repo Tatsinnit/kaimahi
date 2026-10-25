@@ -4,6 +4,7 @@ import { randomBytes, timingSafeEqual, createHash } from "node:crypto";
 import { instructionSections, replaceInstructions, replaceExamples, effectiveModel, preRouteRefusal, agentName, fileLocation } from "./authoring.mjs";
 import { readFile } from "node:fs/promises";
 import http from "node:http";
+import { ensureHostRuntime, previewServer, beginPreview, closeHostRuntime, HostRuntimeUnavailable } from "./host-relay.mjs";
 
 export const CANVAS_ID = "kmx-agent-view";
 export const SERVER_NAME = "kmx-agent-builder";
@@ -31,8 +32,8 @@ const MESSAGES = {
 };
 
 export class ViewError extends Error {
-  constructor(code) {
-    super(MESSAGES[code] ?? MESSAGES.unavailable);
+  constructor(code, message = MESSAGES[code] ?? MESSAGES.unavailable) {
+    super(message);
     this.name = "ViewError";
     this.code = MESSAGES[code] ? code : "unavailable";
   }
@@ -40,7 +41,8 @@ export class ViewError extends Error {
 const invalid = () => {
   throw new ViewError("invalid-resource");
 };
-const safeError = (e) => (e instanceof ViewError ? e : new ViewError("unavailable"));
+const safeError = (e) => e instanceof ViewError ? e : new ViewError("unavailable",
+  e instanceof HostRuntimeUnavailable ? "Host tools are unavailable in this session. Start a new Copilot session." : MESSAGES.unavailable);
 
 // Preserve the requested path. The MCP server resolves it and checks the target;
 // a Windows-hosted extension must not resolve WSL paths on the Windows filesystem.
@@ -137,6 +139,8 @@ function parseView(json, path) {
   if (typeof raw.model === "string") model = clean(raw.model, 300);
   else if (isObj(raw.model)) model = fields(raw.model).map(([k, v]) => `${k}: ${v}`).join("\n");
   else invalid();
+  const tools = raw.tools ?? [];
+  if (!Array.isArray(tools) || tools.length > 32 || new Set(tools).size !== tools.length || tools.some(t => typeof t !== "string" || !/^[A-Za-z_][A-Za-z0-9_-]{0,63}$/.test(t))) invalid();
   const examples = list(raw.examples).map((e) => {
     if (!isObj(e) || typeof e.id !== "string") invalid();
     return {
@@ -158,7 +162,7 @@ function parseView(json, path) {
     file: { path, revision: file.revision },
     title: clean(raw.title, 200),
     instructions: clean(raw.instructions, 60000, true),
-    model,
+    model, tools,
     examples,
     ...(authoring ? { authoring } : {}),
     latest: { status: latest.status, badge, ...(result ? { result } : {}) },
@@ -186,9 +190,9 @@ export async function readView(session, rawPath) {
   const chat = readChatModel(session);
   let response;
   try {
-    response = await session.rpc.mcp.resources.read({ serverName: SERVER_NAME, uri: resourceUri(path) });
-  } catch {
-    throw new ViewError("unavailable"); // never surface raw transport errors
+    response = await session.rpc.mcp.resources.read({ serverName: previewServer(session), uri: resourceUri(path) });
+  } catch (e) {
+    throw safeError(e); // never surface raw transport errors
   }
   const contents = response?.contents;
   if (!Array.isArray(contents) || contents.length !== 1 || typeof contents[0]?.text !== "string") invalid();
@@ -304,7 +308,8 @@ export function createActionHandler({ session, path }) {
     try { metadata = await session.rpc.tools.getCurrentMetadata(); }
     catch { throw new ViewError("unavailable"); }
     if (disposed) throw new ViewError("unavailable");
-    const tools = metadata.tools?.filter((t) => t.mcpServerName === SERVER_NAME && t.mcpToolName === operation);
+    const serverName = ["run", "test"].includes(operation) ? previewServer(session) : SERVER_NAME;
+    const tools = metadata.tools?.filter((t) => t.mcpServerName === serverName && t.mcpToolName === operation);
     if (tools?.length !== 1) throw new ViewError("unavailable");
     let result, run;
     if (operation === "test") {
@@ -348,6 +353,7 @@ export function createActionHandler({ session, path }) {
     busy = true;
     current = undefined; // Never replay the previous invocation's snapshot.
     let saved = false, tested = false, targetRevision, ids, operation, model;
+    const lease = ["run", "test", "save-and-test"].includes(input.operation) ? beginPreview(session) : undefined;
     try {
       if (disposed) throw new ViewError("unavailable");
       if (uncertain && input.operation !== "reload") throw new ViewError("outcome-unknown");
@@ -395,6 +401,9 @@ export function createActionHandler({ session, path }) {
       if (operation === "run" && (typeof input.input !== "string" || Buffer.byteLength(input.input, "utf8") > 16384)) throw new ViewError("invalid-action");
       // Test/Run have no revision parameter. Check the actual result afterward,
       // not a fabricated precondition or a refreshed draft revision.
+      if (view.tools.length) {
+        try { await ensureHostRuntime(session, lease); } catch { /* Original server retains the plain unbound refusal; never invent a binding. */ }
+      }
       tested = true;
       const outcome = await invoke(operation, { ...(runtimeModel ? { model: runtimeModel } : {}), ...(operation === "run" ? { input: input.input } : {}), ...(input.caseId !== undefined ? { caseId: input.caseId } : {}), showContent: input.showContent === true, showFailedContent: true },
         { id: input.runId, revision: targetRevision, model, caseIds: input.caseId === undefined ? ids : [input.caseId], totalCases: ids.length });
@@ -431,7 +440,7 @@ export function createActionHandler({ session, path }) {
         Object.assign(response, { error: "outcome-unknown", message: MESSAGES["outcome-unknown"] });
       }
       return response;
-    } finally { busy = false; }
+    } finally { lease?.release(); busy = false; }
   };
   act.dispose = () => {
     disposed = true;
@@ -600,6 +609,7 @@ export function createViewController({ getSession }) {
     const all = [...instances.values()];
     instances.clear();
     await Promise.all(all.map(stop));
+    if (getSession()) await closeHostRuntime(getSession());
   }
   async function command(ctx) {
     const session = getSession();
