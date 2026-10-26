@@ -155,6 +155,7 @@ cosign verify-blob `
   --certificate-oidc-issuer https://token.actions.githubusercontent.com `
   --bundle .\checksums.txt.sigstore.json `
   .\checksums.txt
+if ($LASTEXITCODE -ne 0) { throw "Sigstore verification failed" }
 
 $Rows = @(Get-Content .\checksums.txt | Where-Object {
   $_ -match ('^[0-9a-fA-F]{64}\s+\*?' + [regex]::Escape($Asset) + '$')

@@ -66,6 +66,7 @@ download its checksum manifest, bundle and the one Unix bare binary you need int
 an empty directory (the assets are not archives):
 
 ```bash
+set -euo pipefail
 version='v<version>'
 base="https://github.com/kaimahi-agents/kaimahi/releases/download/$version"
 asset=kmx-linux-amd64 # select the matching Linux/macOS asset
@@ -80,10 +81,16 @@ cosign verify-blob \
   checksums.txt
 
 rows=$(grep -E "^[0-9a-f]{64}  ${asset}$" checksums.txt || true)
-test "$(printf '%s\n' "$rows" | grep -c .)" -eq 1
+if [ "$(printf '%s\n' "$rows" | grep -c .)" -ne 1 ]; then
+  echo "missing or duplicate checksum for $asset" >&2
+  exit 1
+fi
 want=${rows%% *}
 got=$(sha256sum "$asset" | cut -d' ' -f1)
-test "$want" = "$got"
+if [ "$want" != "$got" ]; then
+  echo "checksum mismatch for $asset" >&2
+  exit 1
+fi
 ```
 
 On macOS, use `shasum -a 256 "$asset" | cut -d' ' -f1` for `got`.

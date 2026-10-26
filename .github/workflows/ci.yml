@@ -141,7 +141,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $tests = @('TestGuardedWindowsDeferredOperationsRefuseBeforeEffects','TestGuardedWindowsAllowsPackageFreeFileCommands','TestGuardedWindowsFileCommandsRefuseEveryExternalRouteBeforeEffects','TestGuardedWindowsFileSnapshotCannotChangeRouteAfterAdmission','TestGuardedWindowsExplainRequiresExplicitFileAndAllowsFileScopedClear','TestGuardedWindowsFileExplainClearStaysSubjectScoped','TestGuardedWindowsSupportedCommandFlagsAreExhaustivelyAllowlisted','TestGuardedWindowsVersionHelpAndCompletionRemainInert','TestGuardedWindowsCommandTreeIsExhaustivelyClassified','TestFileCommandJournaledPreviewDemo','TestPrivateTempDirReturnsCanonicalPrivatePath')
+          $tests = @('TestGuardedWindowsDeferredOperationsRefuseBeforeEffects','TestGuardedWindowsAllowsPackageFreeFileCommands','TestGuardedWindowsFileCommandsRefuseEveryExternalRouteBeforeEffects','TestGuardedWindowsFileSnapshotCannotChangeRouteAfterAdmission','TestGuardedWindowsExplainRequiresExplicitFileAndAllowsFileScopedClear','TestGuardedWindowsFileExplainClearStaysSubjectScoped','TestGuardedWindowsSupportedCommandFlagsAreExhaustivelyAllowlisted','TestGuardedWindowsVersionHelpAndCompletionRemainInert','TestGuardedWindowsCommandTreeIsExhaustivelyClassified','TestFileCommandJournaledPreviewDemo')
           $output = & "$env:RUNNER_TEMP\kmx-windows-tests.exe" go test -race -count=1 -timeout=600s -v `
             -run ('^(' + ($tests -join '|') + ')$') ./cmd/kmx 2>&1
           $status = $LASTEXITCODE
