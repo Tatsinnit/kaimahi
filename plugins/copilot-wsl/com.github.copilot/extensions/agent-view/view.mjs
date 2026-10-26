@@ -22,6 +22,7 @@ const MESSAGES = {
   unavailable: "The kmx agent builder could not be read. Check that its MCP server is running.",
   "invalid-resource": "The kmx agent view was not in the supported format.",
   "invalid-file": "This agent file needs fixing before it can open. Check its format and test fields.",
+  "not-found": "File not found. Check the name, or give the full path.",
   "models-unavailable": "Model choices are unavailable. Your model selection is unchanged.",
   "too-large": "The kmx agent view was too large to show.",
   "invalid-action": "This canvas action is not supported.",
@@ -164,6 +165,7 @@ function parseView(json, path) {
   }
   if (raw?.schemaVersion === 1 && raw.kind === "kmx.agent-view-error" && raw.reasonCode === "invalid_tool_settings") throw new ViewError("invalid_tool_settings");
   if (raw?.schemaVersion === 1 && raw.kind === "kmx.agent-view-error" && raw.reasonCode === "invalid_file") throw new ViewError("invalid-file");
+  if (raw?.schemaVersion === 1 && raw.kind === "kmx.agent-view-error" && raw.reasonCode === "not_found") throw new ViewError("not-found");
   if (!isObj(raw) || raw.schemaVersion !== 1 || raw.kind !== KIND) invalid();
   const file = raw.file;
   if (!isObj(file) || file.path !== path || typeof file.revision !== "string" || !/^sha256:[0-9a-f]{64}$/.test(file.revision)) invalid();
@@ -294,7 +296,7 @@ function observed(view, operation, ids, caseId, complete, model) {
 // The page can choose a declared interaction, never a tool, path or server.
 export function createActionHandler({ session, path }) {
   path = normalizePath(path);
-  let busy = false, uncertain = false, current, disposed = false, captureAttempt;
+  let busy = false, uncertain = false, current, disposed = false, captureAttempt, saving;
   const certified = new Map();
   const allowed = {
     "save-and-test": ["expectedRevision", "sections", "examples", "exampleOrigins", "tools", "toolSettings", "expectedSettingsRevision", "showContent", "caseId", "model", "runId", "comparisonModels"],
@@ -364,7 +366,11 @@ export function createActionHandler({ session, path }) {
       run = { ...scope, toolCallId: randomBytes(24).toString("base64url"), rows: new Map(), state: "running", started: Date.now(), pending: true };
       current = run; run.approval = observePreview(session, run.toolCallId);
       if (typeof session.on === "function") run.unsubscribe = session.on("tool.execution_progress", event => progress(run, event));
+    } else if (operation === "edit" && scope?.id) {
+      // Edit before a Test can wait for approval in chat too; progress reports it.
+      saving = { id: scope.id, toolCallId: randomBytes(24).toString("base64url") }; saving.approval = observePreview(session, saving.toolCallId);
     }
+    const call = run ?? (operation === "edit" ? saving : undefined);
     const unconfirmed = () => {
       const approvalTimeout = run?.approval?.timedOut() === true;
       const error = new ViewError("outcome-unknown", approvalTimeout
@@ -374,12 +380,12 @@ export function createActionHandler({ session, path }) {
       return error;
     };
     try {
-      result = await session.rpc.tools.execute({ name: tools[0].name, arguments: { schemaVersion: 1, path, ...args }, ...(run ? { toolCallId: run.toolCallId } : {}) });
+      result = await session.rpc.tools.execute({ name: tools[0].name, arguments: { schemaVersion: 1, path, ...args }, ...(call ? { toolCallId: call.toolCallId } : {}) });
     } catch {
       finish(run);
       if (run?.stopRequested && await run.abortAck && !disposed) return { stopped: true };
       uncertain = true; throw unconfirmed();
-    } finally { finish(run); run?.releaseAbort?.(false); }
+    } finally { finish(run); run?.releaseAbort?.(false); if (call === saving) { saving?.approval.clear(); saving = undefined; } }
     if ((run?.approval?.pendingTool() || run?.approval?.timedOut()) && result?.resultType !== "success") {
       uncertain = true; throw unconfirmed();
     }
@@ -488,6 +494,7 @@ export function createActionHandler({ session, path }) {
     // available during Test and cannot clear an existing uncertainty lock.
     if (input.operation === "progress") {
       const run = current;
+      if (saving && saving.id === input.runId) { await saving.approval.refresh(); return { run: undefined, ...(saving?.approval.waiting() ? { approvalWaiting: true } : {}) }; }
       if (run?.id !== input.runId) return { run: undefined };
       await run.approval?.refresh();
       return { run: current === run && !disposed ? snapshot() : undefined };
@@ -560,7 +567,7 @@ export function createActionHandler({ session, path }) {
         if (Buffer.byteLength(content, "utf8") > 256 * 1024) throw new ViewError("too-large");
         if (content !== view.authoring.source || patches?.length) {
           captureAttempt = undefined; certified.clear();
-          const edit = await invoke("edit", { expectedRevision: input.expectedRevision, content, ...(patches?.length ? { exampleEdits: patches } : {}) });
+          const edit = await invoke("edit", { expectedRevision: input.expectedRevision, content, ...(patches?.length ? { exampleEdits: patches } : {}) }, validRunId(input.runId) ? { id: input.runId } : undefined);
           // A later settings read/write failure must retain this acknowledged Edit.
           if (changes.length) saved = true;
           if (patches?.length) {
@@ -638,6 +645,7 @@ export function createActionHandler({ session, path }) {
   };
   act.dispose = () => {
     disposed = true;
+    saving?.approval.clear(); saving = undefined; // The Edit itself is neither cancelled nor retried.
     finish(current); current?.releaseAbort?.(false); current = undefined;
   };
   return act;
