@@ -38,7 +38,8 @@ changes in the package's Go doc comment.
   a model. Keep modelaccess independent of App and Unix-only helpers. Foundry
   endpoint comes only from runtime status; no fixed port, catalog download,
   service start or silent model selection. Native model-access package tests
-  remain separate from Windows CLI qualification.
+  remain separate from Windows CLI qualification; native Windows model/provider
+  commands stay deferred.
 
 - `internal/kmx/fileaccess` is a package-independent checked filesystem
   foundation: existing-object reads, security/identity inspection, private first
@@ -48,9 +49,19 @@ changes in the package's Go doc comment.
   retained evaluation diagnostics use it; ordinary `StateDir` remains
   location-only. Publication errors distinguish positively observed visibility
   from unresolved visibility; false plus error is never absence. Native Windows
-  package tests qualify those local-NTFS day-zero internals only, not the guarded
-  CLI, native arm64 execution, a release artifact or general user support.
-  OCI/workspace and other deferred operation adapters remain inert.
+  amd64 executes the narrow CLI plus these local-NTFS internals; Windows arm64 is
+  cross-build/vet/checksum only, never native execution. Writable Windows state
+  requires local-disk NTFS with persistent ACLs, current-user ownership and a
+  protected owner-only DACL. Refuse unsafe existing ACLs without repair. Reject
+  non-NTFS, UNC/network, device, SUBST/remapped, alternate-stream and exposed
+  symlink/junction/reparse state roots. Synchronized folders are outside the
+  qualified boundary even when their current NTFS representation is not exposed
+  as a reparse point. This is not power-loss
+  certification or a backup guarantee. Native Windows and WSL state must be
+  physically separate because locks do not coordinate; WSL/Linux refuses
+  recognized Windows-drive mounts for writable KMX state. Read-only Windows
+  source input is a separate contract. OCI/workspace and other deferred operation
+  adapters remain inert. See [native Windows](docs/windows.md).
 
 - Follow the [command conventions](docs/command-conventions.md), the implemented
   interface in [docs/kmx.md](docs/kmx.md) and the
@@ -666,7 +677,8 @@ only explicit `JudgeEndpoint` overrides it. Journals keep content in cleartext,
   identity-bound, directory-flushed and rediscovers partial known families after
   interruption without touching unrelated entries. Journals stay under
   `config.StateDir` on every OS (`%LOCALAPPDATA%` on Windows). Native package
-  tests qualify local-NTFS storage, not the guarded Windows CLI.
+  and CLI tests qualify local-NTFS storage only within the narrow Windows
+  day-zero path.
 Completed non-pass `test FILE` outcomes additionally retain bounded diagnostics
 in the existing `eval-failures` store. A file subject is the checked physical
 parent identity plus normalized leaf name; records keep exact source revision,
@@ -704,6 +716,35 @@ traces cannot pass. Inspection replays with zero model/executor/judge calls,
 without bindings or credentials, and has no verdicts. Preview
 and replay never produce suite evidence, receipts, publication or Deploy
 authority.
+
+## Native Windows boundary
+
+Native Windows on `main` is unreleased and operation-specific. Permit only inert
+version/help/completion, package-free fake `run FILE` / `test FILE`, and offline
+`test explain ... --file FILE`; hidden `eval explain` may remain only as the
+deprecated compatibility spelling. File Run/Test may use inline `--prompt`, but
+provider, endpoint, tool-binding and prompt-file modes stay deferred. These
+previews create no suite evidence, publication or Deploy authority.
+
+Every other native Windows route refuses before configuration, state,
+subprocess, network, cluster or ordinary output effects: Docker/kind/Kubernetes,
+OCI/workspace/suite operations, model/provider/network routes, native MCP/Copilot,
+tool bindings, AgentKit/Buildx, cluster records/preferences, managed tools,
+publication and deployment. Never add WSL or shell fallback. WSL remains the
+explicit route for broader workflows and the existing WSL Copilot plugin.
+
+Hosted Windows amd64 must build/vet all packages and execute both the checkout
+CLI and exact staged release `.exe` through version/help/completion plus the
+package-free fake Run/failing Test/offline Explain journey with no skips. Windows
+arm64 is cross-built, vetted, metadata-checked and checksummed only; make no
+native-execution claim. Stable v0.8.1 and `@latest` have no Windows `.exe`.
+`install.sh`, Homebrew and generic Go `@latest` remain Unix/WSL routes where
+applicable; no Winget/package-manager claim. A future containing release uses
+exact `kmx-windows-{amd64,arm64}.exe` assets and signs their checksum manifest
+with Sigstore, not the executables with Authenticode. Current artifacts may be
+unsigned. Record clean-machine `Get-AuthenticodeSignature`, Zone.Identifier and
+SmartScreen results; never advise Unblock-File, disabled protections, execution-
+policy changes, Developer Mode or policy bypass. A policy block is a blocker.
 
 ## Offline multi-member workspace boundary
 

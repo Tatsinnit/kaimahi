@@ -18,8 +18,9 @@ is in your installed release.
 ## Install
 
 On Windows, you need the Copilot app and CLI, a signed-in Copilot account with
-model access, and a default WSL distribution. Native Windows kmx is not supported
-for this path.
+model access, and a default WSL distribution. The
+[native Windows day-zero CLI](windows.md) does not include `kmx mcp` or a native
+Copilot plugin, so this path remains explicitly WSL-hosted.
 
 1. In WSL, install kmx:
 

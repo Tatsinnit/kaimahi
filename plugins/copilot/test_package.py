@@ -277,7 +277,7 @@ class PackageTests(unittest.TestCase):
                                    if Path(name).suffix in {".js", ".mjs"}})
 
 
-@unittest.skipIf(os.name == "nt", "main still blocks native Windows CLI; packaging checks run above")
+@unittest.skipIf(os.name == "nt", "native Windows MCP/plugin remains deferred; packaging checks run above")
 class ProcessTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
