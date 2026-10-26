@@ -112,6 +112,7 @@ const PLAIN_REASONS = {
   copilot_quota: "Copilot's usage limit was reached.", copilot_model_unavailable: "Choose an available Copilot model.",
   copilot_malformed: "Copilot returned an answer that could not be used.", copilot_keychain_unavailable: "Copilot sign-in could not be read. Use an existing GitHub sign-in.",
   copilot_unavailable: "Copilot could not complete this run.",
+  model_reply_unusable: "This model's reply couldn't be used, so the test didn't finish. Try another model.",
 };
 export function plainReason(row) {
   if (row?.reasonCode === "copilot_model_unavailable" && row.reason?.startsWith("Available Copilot models: ")) {
@@ -231,8 +232,15 @@ export function resultHistory(initial) {
       return matches.length === 1 ? { ...view, latest: matches[0].latest } : undefined;
     },
     pair: () => [...models.values()],
-    noteCapture: receipt => { capturedModel = receipt.model; },
-    comparisonModels(selected) { const candidates = [...models.values()].map(modelId).filter(id => id !== selected); const other = candidates.includes(preferred) ? preferred : candidates.at(-1) ?? (capturedModel !== selected ? capturedModel : undefined); return other ? [selected, other] : [selected]; },
+    noteCapture: (receipt, saved) => {
+      capturedModel = receipt.model;
+      const defs = uniqueIndex(saved?.authoring?.examples ?? [], e => e.id), route = receipt.modelRoute;
+      if (saved) for (const c of inspectCases({ ...saved, latest: { status: "current", result: receipt } })) {
+        const id = c.example.id, record = { definition: defs.get(id), c: { ...c, capturedRevision: saved.file.revision }, model: route };
+        if (record.definition && c.row) { records.set(id, record); modelCases.set(`${route}\0${id}`, record); }
+      }
+    },
+    comparisonModels(selected) { const kept = [...models.values()], candidates = kept.filter(v => v.latest.result.state === "complete").map(modelId).filter(id => id !== selected); const other = candidates.includes(preferred) ? preferred : candidates.at(-1) ?? (capturedModel !== selected && !attempts.has(capturedModel) && !kept.some(v => modelId(v) === capturedModel) ? capturedModel : undefined); return other ? [selected, other] : [selected]; },
     prefer: model => { preferred = model; },
     focus: model => { focused = model; },
     started: model => { attempts.delete(model); },
