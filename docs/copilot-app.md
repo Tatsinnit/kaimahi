@@ -75,7 +75,9 @@ holds the prompt, tool names and tests; you can keep it in version control with
 the code it describes. If your host
 cannot render the canvas, Copilot can still use kmx's tools in text.
 
-*Screenshot to add: a newly created agent with Prompt and Tests visible.*
+![The release-notes prompt and tests during a run, with two tests passed and the third running](images/copilot-running.png)
+
+*Two tests have passed while the third is still running.*
 
 ## Choose tools for tests
 
@@ -91,6 +93,10 @@ saves, not one transaction. If a save is partial or unconfirmed, tests do not ru
 keep the draft and deliberately reload to inspect what was saved. Do not retry
 an uncertain write. This switch uses `set_tool_state`, included in the pinned
 v0.9.0-rc.3 binary above.
+
+![Tools section showing one selected tool from the GitHub MCP server, with earlier test results marked out of date](images/copilot-tools.png)
+
+*One GitHub tool is selected, and earlier test results are out of date.*
 
 ## Add tests and run them
 
@@ -128,7 +134,26 @@ full Test reply confirms the run. A running indicator does not mean a test has p
 Known issue: Copilot may keep showing “Working” after a canvas run until the next
 chat turn, even when the run has finished.
 
-*Screenshot to add: a completed test and its check explanations.*
+![A failed check requires the PR number at the end of a bullet; the answer puts it at the start](images/copilot-test-detail.png)
+
+*The check fails because the answer puts the PR number at the start instead of the end.*
+
+### Keep tool results with a test
+
+Open a test and choose **Live** or **Recorded** for each tool. Live calls the
+tool on each run. Recorded captures the first successful call and saves its
+arguments and result with the test; later runs replay that saved result. Press
+**Enter** to save the choice and run. Use **Record again** to capture fresh data.
+Recorded details let you inspect the saved call and result.
+
+![Test detail with an unsaved Recorded selection and a prior result labelled one live call](images/copilot-live-recorded.png)
+
+*Recorded is selected but unsaved, and the previous result shows one live call.*
+
+Saved tool output is cleartext in the agent file. Review it before committing
+or sharing. A recorded pass does not prove the live server works today. See
+[per-test recorded tools](agent-file.md#per-test-recorded-tools) for matching
+rules and **Calls** / **Doesn't call** checks.
 
 ## Change the prompt and rerun
 
@@ -157,7 +182,15 @@ binding path. An unbound tool gives one plain reason; judges remain tool-free.
 See the [CLI reference](kmx.md#agent-file-local-preview-unreleased-integration)
 for supported file-preview routes and limits.
 
-*Screenshot to add: the model picker and a rerun on a second model.*
+![Model picker set to Claude Haiku 4.5, with three of four tests passing](images/copilot-model-picker.png)
+
+*Claude Haiku 4.5 is selected, with three of four tests passing.*
+
+![The same prompt's test verdicts on two models: Terra passed all four; Haiku failed the fix-note check](images/copilot-compare.png)
+
+*Terra passes all four tests, while Haiku fails the fix-note check.*
+
+These comparison pictures are from a build before rc.3.
 
 ## Run the same tests in CI
 
