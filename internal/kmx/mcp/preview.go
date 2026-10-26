@@ -42,7 +42,7 @@ func Operations(files *Files, application *app.App, route *modelaccess.Route) ma
 		if name == "run" {
 			schema.Properties["input"] = &jsonschema.Schema{Type: "string", MaxLength: new(agentfile.MaxInputBytes)}
 		}
-		ops[name] = Operation{Schema: schema, Description: "kmx local preview of this charter; saved examples, optionally one case (always partial). Returns the shared revision, route, state and verdict; never deployment evidence.", Handler: func(ctx context.Context, req *sdk.CallToolRequest) (*sdk.CallToolResult, error) {
+		ops[name] = Operation{Schema: schema, Description: "kmx local preview of this charter; saved examples, optionally one case (always partial). Returns the shared revision, route, state and verdict; never deployment evidence. A successful first live call for a pending Recorded tool saves its result in this file.", Handler: func(ctx context.Context, req *sdk.CallToolRequest) (*sdk.CallToolResult, error) {
 			var input struct {
 				Path              string  `json:"path"`
 				Model             string  `json:"model"`
@@ -88,6 +88,10 @@ func Operations(files *Files, application *app.App, route *modelaccess.Route) ma
 			options := app.FilePreviewOptions{File: input.Path, SourceFile: sourcePath, FullPath: files.root == nil, Operation: name, CaseID: input.CaseID, Input: input.Input, ShowContent: input.ShowContent, ShowFailedContent: input.ShowFailedContent, Model: input.Model, Route: executionRoute, CaseFinished: caseProgressNotifier(ctx)}
 			if retentionPath != "" && parsed != nil {
 				options = app.WithFilePreviewRetention(options, retentionPath, parsed.Revision)
+			}
+			options.PrepareRecordingSave = func(ctx context.Context, revision string) (app.RecordingSaver, error) {
+				save, err := files.RecordingSaver(ctx, path, revision)
+				return app.RecordingSaver(save), err
 			}
 			result, err := application.PreviewAgentSnapshot(ctx, parsed, options)
 			if detail != nil && result.ReasonCode == "invalid_file" {
