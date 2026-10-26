@@ -1063,8 +1063,8 @@ platform-specific, digest-pinned OCI manifests. The example targets an Azure
 OpenAI deployment named `gpt-5-mini` through the OpenAI-compatible v1 endpoint.
 The build records only the environment variable name `AZURE_OPENAI_API_KEY`; it
 never reads or embeds the key. `--model-api-key-env` accepts only names matching
-`[A-Za-z_][A-Za-z0-9_]*`; invalid names are rejected before any build files are
-written. Supply the key in that environment variable when running or deploying
+`[A-Za-z_][A-Za-z0-9_]*`; invalid names and known credential-shaped values are
+rejected before source reads or build files are written. Supply the key in that environment variable when running or deploying
 the resulting image.
 
 The command validates the suite, resolves one immutable sandbox build plan and
@@ -1094,6 +1094,63 @@ image must therefore currently be a complete AgentKit adapter image from the
 `pydantic-ai` runtime; other harness repositories are refused. A future
 conformant AgentKit adapter or another builder can replace it without changing
 AgentSuite resolution.
+
+#### Experimental image contracts and publication
+
+`suite build --suite-ref <registry/repository@sha256:...>` compares every local
+packaged file, entry type, mode and link target with a bounded, digest-verified published
+snapshot, including cases and supplemental metadata, then builds from the fetched
+content. Loose directories use the shared portable packing policy: undeclared
+files default to non-executable, and ToolProvider inventory owns declared modes,
+independently of host execute bits. Published executable permissions are preserved;
+group/world write bits are masked
+when materializing build sources. Modes without owner file-read or directory
+read/search permissions (including `0000`) refuse before creating the staging
+directory; declared mode identity is never rewritten. Capability-based agents omit model build flags:
+selected inference is supplied through the `agentkit-v0-mounted-v1` configuration
+ABI. Mounted builds currently support only `linux/amd64`: their qualified harness
+digest names a single amd64 manifest. Other mounted platforms refuse before export.
+The AgentKit adapter supports only port 8080 and `/healthz`, and refuses
+unsupported serving declarations before building.
+The shared `localartifact` loader retains accepted confined symlink/hardlink
+semantics as well as files/directories; build materialization does not restore a
+separate registry parser. Mounted builds require declared non-secret
+`AGENTKIT_BIND` and secret `AGENTKIT_AUTH_TOKEN` inputs. Exact-model declarations
+must include the selected `--model-api-key-env` as a secret input. Unsupported
+input environments refuse before export rather than becoming misleading labels.
+
+`suite push-image <archive> <reference> [--platform linux/amd64] [--force]`
+publishes the complete verified OCI image graph, including flat or nested
+attestation layouts, and prints the runnable platform digest. Ordinary build
+output needs no deployment label to be published. Deployment consumers separately
+validate declarations. A different existing tag refuses unless `--force` is
+explicit; same-digest publication is a no-op. The existing non-atomic tag preflight
+and registry authentication policy below apply. `--platform` requires nonempty
+`os/architecture` components with exactly one slash; malformed values refuse
+before archive reads.
+OCI index/manifest `subject` links are unsupported and refuse during inspection
+before registry requests, including subject links on attestation manifests.
+This does not affect in-toto statement subjects. Image resolution traverses nested
+indexes with a global descriptor/depth budget and refuses ambiguous platform matches.
+Image manifest/index transport uses the inspector's 4-MiB metadata budget;
+suite provenance/referrer operations retain their separate 1-MiB budget.
+
+Image declarations bind the full suite OCI manifest digest (including cases and
+metadata), composition and exact build-profile digests, without embedding the
+source registry location. The public `http-v1` serving interface is target-neutral.
+`SandboxPlan.SuiteManifestHash` names the public root JSON identity; the materializing
+caller supplies the distinct full OCI source digest. The internal primitives sit
+beneath experimental `AgentSuites.Validate → Build → Push`, but do not implement
+the alpha `pkg/kmx.AgentSuites` service or a conformant sandbox binding.
+The KMX-owned image-declaration schema is checkout-only and self-contained, with
+explicit required/null and mounted-inference rules. Cross-field semantic checks
+(capacity comparison, input-key uniqueness and digest agreement) still require
+the Go validator, as documented in the schema.
+Full image inventory/base composition, image Deploy, evaluation and TUI workflows
+are separate work tracked under [#571](https://github.com/kaimahi-agents/kaimahi/issues/571),
+including the image-set association decisions from #356 and materialization
+handoff from #345. These commands do not add image execution to native workspace,
+flow or AgentSessions deployment paths.
 
 #### Registry authentication
 
