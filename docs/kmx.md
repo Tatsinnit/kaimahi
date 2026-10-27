@@ -35,7 +35,9 @@ It never starts a runtime, downloads a model, changes a saved selection or runs
 an agent. Foundry Local supplies its own endpoint; Ollama defaults to loopback
 port 11434. See [model discovery](models.md#installed-local-model-discovery) for
 requirements, sizes and the non-secret route contract. These commands are
-unreleased; native Windows package tests do not yet qualify the Windows CLI.
+unreleased and outside the narrow native Windows command boundary. Package-level
+Windows model-access tests do not enable native model discovery; use WSL for
+model routes. See [native Windows](windows.md).
 
 ## Copilot model access
 
@@ -69,13 +71,17 @@ unreleased. File Run/Test can explicitly consume the saved credential with
 existing Copilot chat is introduced. See
 [storage and model routes](models.md#explicit-copilot-model-access)
 and [direct transport](copilot-inference.md#direct-model-access). Native package
-tests are not full Windows CLI qualification.
+tests do not enable these model/provider routes in the narrow Windows CLI.
 
 ## Install
 
-**On Windows, use WSL for now.** Install and run kmx inside your Linux
-WSL distribution, not PowerShell or Command Prompt. Native Windows builds
-are not supported yet; track [Windows support in #578](https://github.com/kaimahi-agents/kaimahi/issues/578).
+On Windows, the install methods in this section are WSL routes for the full CLI;
+run them inside the Linux distribution. Current `main` separately supports an
+**unreleased, narrow** [native Windows day-zero CLI](windows.md):
+version/help/completion, package-free fake file Run/Test and offline file Explain.
+Stable v0.8.1 and `@latest` have no Windows `.exe`. Do not use Homebrew,
+`install.sh` or generic Go `@latest` guidance as a native Windows installer;
+future Windows release assets require the page's explicit manual verification.
 
 The stable release is available through the official Homebrew tap:
 
@@ -176,6 +182,10 @@ on stderr, with no result document. Rooted API callers can pass an already-parse
 snapshot without reopening its filename; the CLI path is a thin load-and-delegate
 wrapper.
 Neither operation changes source or produces native evaluation/deploy evidence.
+On native Windows, the supported slice is narrower still: the package-free
+offline `fake` route with no provider, endpoint, tool binding or prompt-file
+input. See [native Windows](windows.md#supported-native-commands). A native
+preview pass creates no suite evidence, publication or deployment authority.
 An optional canonical Tools declaration and explicit `--tool-bindings FILE` select
 one [host-owned read-only GitHub MCP operation](local-preview.md#host-tool-foundation).
 The operator binds one repository and an explicit environment credential name;
@@ -210,7 +220,8 @@ existing preview: cancel it explicitly, or let its five-minute bound finish.
 Unbound tools refuse. Bound agent runs support tools; judging stays tool-free.
 There are no retries, redirects or provider/model fallback. A nil dependency
 still refuses `runner_unavailable`. Hermetic tests do not qualify real local
-models or native Windows.
+models or native Windows model/provider routes; only the package-free fake
+Windows path is qualified.
 
 The offline `fake` route is deliberately small: it recognizes
 ``Reply with exactly `Hello, ` followed by the input`` (the prefix can change),
@@ -366,6 +377,8 @@ journals, source history, workspace failures, passing proof or runtime history.
 Do not mix FILE with `--agent`, workspace, destination, evidence, native judge or
 cluster flags, including explicitly supplied defaults. Existing live
 `run --agent` and full-workspace Test contracts remain separate and unchanged.
+Those live/workspace modes are deferred on native Windows and refuse before
+effects.
 
 ### Frozen run-profile export (unreleased)
 
@@ -701,9 +714,10 @@ or model request. Tools accept no endpoint, credential or arbitrary-command fiel
 Run/Test use the same
 [file preview runner](#agent-file-local-preview-unreleased-integration) as the
 CLI: fake/local and explicit Copilot routes use embedded Sessions and one private
-journal, with one Session per agent turn and per judge sample. A nil runner still returns `runner_unavailable`, never
-a fallback. Hermetic checks do not qualify real models or native Windows.
-There is no additional Explain/model/install tool; offline Explain stays a CLI action.
+journal, with one Session per agent turn and per judge sample. A nil runner still
+returns `runner_unavailable`, never a fallback. Hermetic checks do not qualify
+real models or native Windows MCP. There is no fifth Explain/model/install tool;
+offline Explain stays a CLI action.
 
 #### Saved source versions and restore
 
@@ -769,7 +783,7 @@ not resolved model credentials or run answers. Keep that directory private:
 0700 directories, 0600 regular single-link files. Existing unsafe state is
 refused rather than chmod-repaired. The operator-selected state directory may
 be a symlink, but owned history components may not. No native Windows history
-qualification is implied. Filesystem IO is bounded but synchronous.
+or MCP qualification is implied. Filesystem IO is bounded but synchronous.
 
 Retention is at most 20 snapshots per file, 200 per operation root and 32 MiB of
 encoded records per root; source is bounded to 256 KiB. The oldest eligible
@@ -1329,7 +1343,7 @@ absent. Root `show/list` are not implemented.
 | `--container-engine`, `CONTAINER_ENGINE` | `docker` (default) or `podman`; the flag overrides the environment; keep consistent for every operation on a cluster |
 | `MODEL` | model the runtime pulls and resolves, default `qwen2.5:3b` |
 | `KAIMAHI_CONFIRM` | explicit named-target consent, not a universal yes |
-| `KMX_HOME` | portable override for all kmx state/cache; otherwise the native user config directory (`~/.config/kmx` on Linux, `~/Library/Application Support/kmx` on macOS) |
+| `KMX_HOME` | portable override for all kmx state/cache; otherwise the native user config directory (`~/.config/kmx` on Linux, `~/Library/Application Support/kmx` on macOS, `%LOCALAPPDATA%\kmx` on Windows) |
 
 Use `KMX_HOME` for isolated runs and tests on both Linux and macOS. KMX follows
 Go's native user-config lookup when it is unset: `XDG_CONFIG_HOME` participates
@@ -1337,6 +1351,10 @@ in that lookup on Linux, but it is not the macOS override. Changing `KMX_HOME`
 selects a separate set of saved records; it does not migrate files from the
 native location. Point it only at a trusted private directory: KMX state can
 include kubeconfig snapshots and infrastructure resource identifiers.
+Native Windows writable state has the stricter local-NTFS/current-user/protected-
+DACL contract, and must remain physically separate from WSL state. WSL/Linux
+state cannot use a recognized Windows-drive mount. See
+[Windows writable state](windows.md#writable-state).
 
 ### Where the command will land
 

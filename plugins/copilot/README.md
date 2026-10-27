@@ -355,9 +355,11 @@ Edit → partial Test → full Test pass using the skill's canonical sample.
 They check root isolation, unchanged expectations, overwrite/stale/path refusals,
 protocol stdout and result privacy. This uses kmx's deterministic fake model,
 not a substitute MCP process or real-model qualification.
-Linux/macOS CI runs the real CLI loop. **Windows runs mechanical packaging
-checks only: main still blocks native CLI builds.** A generated Windows command
-is not a qualified Windows release or installed Copilot chat.
+Linux/macOS CI runs the real plugin CLI loop. Windows still runs mechanical
+**plugin** packaging checks only. The separately qualified native Windows core
+CLI is limited to package-free fake file Run/Test and offline Explain; it does
+not enable `kmx mcp`, this plugin or installed Copilot chat. Windows users keep
+the [WSL plugin](../copilot-wsl/README.md).
 
 ## Delivery gates
 
@@ -375,10 +377,12 @@ Go command path, GOOS/GOARCH and clean source revision without executing foreign
 binaries; native version stamping is checked by the existing release gate.
 Go omits ldflags under trimpath, so cross-platform version identity also relies
 on the reviewed release job and signed checksum inventory, not a fabricated
-metadata field. No Windows archive is published while native CLI is guarded.
+metadata field. No native Windows plugin archive is published; Windows `.exe`
+core assets in a containing release remain separate.
 
-`plugin-checksums.txt` and its Sigstore bundle are separate from the unchanged
-four-binary `checksums.txt` consumed by the installer/Homebrew. Both use the
+`plugin-checksums.txt` and its Sigstore bundle are separate from the core binary
+checksum inventory; they cover the four Unix-only plugin archives. New core release manifests contain four Unix binaries
+plus two Windows `.exe` assets; Homebrew remains Unix-only. Both use the
 existing keyless release workflow identity and OIDC issuer; checks performed
 by the same job are not independent publisher authentication. Dry runs sign and
 upload artifacts but publish no release. Archives have an exact file

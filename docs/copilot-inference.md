@@ -86,7 +86,8 @@ Auth/header reference: [vekil authenticator](https://github.com/sozercan/vekil/b
 and [request headers](https://github.com/sozercan/vekil/blob/3e77a9d0739baf7740b141bd88b3fdf40caf7c16/proxy/handler.go).
 KMX does not reuse its disk cache, proxy, retry or failover behavior. Hermetic
 native package tests are not live GitHub/subscription or OS-keychain acceptance
-proof, nor full Windows CLI qualification. Explicit credential access may show
+proof, nor native Windows model/provider command qualification. The supported
+Windows fake file preview does not use this route. Explicit credential access may show
 OS unlock UI; Linux uses the existing login/default collection with kmx-specific service
 and account attributes. Native keychain calls/prompts have no context-cancellation
 guarantee. Unexpected native-dependency panics during credential access are

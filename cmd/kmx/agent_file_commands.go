@@ -94,6 +94,17 @@ func runFileCommand(cmd *cobra.Command, state *commandState, file string, f file
 	if cmd.Name() == "test" {
 		opt.RetentionFile = file
 	}
+	var windowsAgent *agentfile.Agent
+	if state.deps.goos == "windows" {
+		// Freeze the exact snapshot admitted by the native Windows policy before
+		// any optional host input or execution setup. A source edit between Cobra
+		// hooks must not turn a fake, tool-free invocation into another route.
+		var err error
+		windowsAgent, err = agentfile.Load(file)
+		if err != nil || !windowsPackageFreeFakeAgent(windowsAgent) || f.Provider != "" || f.Endpoint != "" || f.ToolBindings != "" || f.GitHubSummary || promptFile != "" {
+			return errWindowsOperationUnsupported
+		}
+	}
 	if f.Verbose {
 		opt.Progress = func(message string) error {
 			_, err := fmt.Fprintf(cmd.ErrOrStderr(), "[verbose] %s\n", message)
@@ -151,7 +162,16 @@ func runFileCommand(cmd *cobra.Command, state *commandState, file string, f file
 	}
 	a := &app.App{FileRunner: state.deps.fileRunner}
 	start := time.Now()
-	result, err := a.PreviewAgentFile(ctx, opt)
+	var result app.FilePreviewResult
+	var err error
+	if windowsAgent != nil {
+		if cmd.Name() == "test" {
+			opt = app.WithFilePreviewRetention(opt, file, windowsAgent.Revision)
+		}
+		result, err = a.PreviewAgentSnapshot(ctx, windowsAgent, opt)
+	} else {
+		result, err = a.PreviewAgentFile(ctx, opt)
+	}
 	if f.Verbose {
 		if _, writeErr := fmt.Fprintf(cmd.ErrOrStderr(), "[verbose] Total elapsed=%s\n",
 			time.Since(start).Round(time.Millisecond)); writeErr != nil {
