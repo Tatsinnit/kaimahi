@@ -61,17 +61,17 @@ Use a dedicated test environment. See [other install methods, prerequisites and 
 ## Agent files in Copilot
 
 On macOS, use the [plain Copilot plugin](plugins/copilot/README.md#install-on-macos):
-install the rc.3 prerelease darwin binary, register `kmx-plugins`, then install the
+install the rc.4 prerelease darwin binary, register `kmx-plugins`, then install the
 PATH plugin. macOS CI checks installation and
 the offline fake-model loop, not a Copilot model or the desktop app.
 
 ### Windows through WSL
 
 For the Markdown-agent inner loop without a Kubernetes cluster, use the
-[WSL Copilot plugin](plugins/copilot-wsl/README.md). Install the paired v0.9.0-rc.3 prerelease in WSL:
+[WSL Copilot plugin](plugins/copilot-wsl/README.md). Install the paired v0.9.0-rc.4 prerelease in WSL:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/kaimahi-agents/kaimahi/v0.9.0-rc.3/install.sh | sudo sh -s -- --version=v0.9.0-rc.3 --bin-dir=/usr/local/bin
+curl -fsSL https://raw.githubusercontent.com/kaimahi-agents/kaimahi/v0.9.0-rc.4/install.sh | sudo sh -s -- --version=v0.9.0-rc.4 --bin-dir=/usr/local/bin
 ```
 
 Then, in a Windows terminal:
@@ -80,6 +80,8 @@ Then, in a Windows terminal:
 copilot plugin marketplace add kaimahi-agents/kaimahi
 copilot plugin install kmx-agent-builder@kmx-plugins
 ```
+
+Until the `kmx-plugins` catalog is repinned to rc.4 after publication, the marketplace entry installs the rc.3 plugin. For the rc.4 pair meanwhile, install the plugin from main instead: `copilot plugin install kaimahi-agents/kaimahi:plugins/copilot-wsl`.
 
 Ask Copilot to create an agent through kmx and open its canvas. No folder or model
 is selected at install time. Choose a model in the canvas or use the agent file's
