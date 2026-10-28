@@ -152,6 +152,14 @@ export function cleanResult(r, status, revision) {
   };
 }
 
+function sourceHistory(raw) {
+  if (raw === undefined) return;
+  if (!isObj(raw) || raw.schemaVersion !== 1 || raw.read !== true ||
+      ["execute", "edit", "capture", "restore"].some(k => raw[k] !== false) ||
+      Object.keys(raw).some(k => !["schemaVersion", "read", "execute", "edit", "capture", "restore"].includes(k))) invalid();
+  return { schemaVersion: 1, read: true, execute: false, edit: false, capture: false, restore: false };
+}
+
 function parseView(json, path) {
   let raw;
   try {
@@ -197,6 +205,7 @@ function parseView(json, path) {
   if (result?.toolSettings && !settingsMatch(result.toolSettings, tools)) invalid();
   const badge = latest.status !== "current" ? latest.status : result.fullPass && result.state === "complete" && result.selection.scope === "full" && result.verdict === "pass" ? "pass" : "not-passing";
   const authoring = authoringSnapshot(raw.authoring, raw.examples, file.revision);
+  const historyCapability = sourceHistory(raw.sourceHistory);
   return {
     file: { path, revision: file.revision },
     title: clean(raw.title, 200),
@@ -207,6 +216,7 @@ function parseView(json, path) {
     ...(token !== undefined ? { toolSettingsRevision: token } : {}),
     examples,
     ...(authoring ? { authoring } : {}),
+    ...(historyCapability ? { sourceHistory: historyCapability } : {}),
     latest: { status: latest.status, badge, ...(result ? { result } : {}) },
   };
 }
