@@ -53,7 +53,7 @@ func Operations(files *Files, application *app.App, route *modelaccess.Route) ma
 		if name == "run" {
 			description = "Run this charter in a kmx local preview with optional ad-hoc input and saved examples, optionally one case (always partial). "
 		}
-		ops[name] = Operation{Schema: schema, Description: description + "Returns the shared revision, route, state and verdict; never deployment evidence. V1 only: A successful first live call for a pending Recorded tool saves its result in this file. Version 3 previews the selected pair at expectedSourceVersion: Run answers without checks; Test evaluates. Version 3 cannot capture; pending recordings refuse before sends.", Handler: func(ctx context.Context, req *sdk.CallToolRequest) (*sdk.CallToolResult, error) {
+		ops[name] = Operation{Schema: schema, Description: description + "Returns the shared revision, route, state and verdict; never deployment evidence. V1 only: A successful first live call for a pending Recorded tool saves its result in this file. Version 3 saves only the selected source after journal close and retains pair history. Version 3 requires expectedSourceVersion: Run answers without checks; Test evaluates. Inspect per-source partial/uncertain acknowledgements; do not retry automatically.", Handler: func(ctx context.Context, req *sdk.CallToolRequest) (*sdk.CallToolResult, error) {
 			var input struct {
 				Path                    string                    `json:"path"`
 				Model                   string                    `json:"model"`
@@ -92,19 +92,7 @@ func Operations(files *Files, application *app.App, route *modelaccess.Route) ma
 			if input.ExpectedRevision != "" && (parsed == nil || parsed.Revision != input.ExpectedRevision) {
 				return nil, refusal("stale_revision")
 			}
-			if parsed != nil && parsed.HasFrontmatter && !input.RecordedReplayOnly && !input.AcknowledgeCopilotTests {
-				settings, settingsErr := localtools.ReadSettingsSnapshot(ctx, sourcePath, parsed.Tools)
-				for _, example := range parsed.Examples {
-					if input.CaseID != "" && example.ID != input.CaseID || example.Mocks == nil {
-						continue
-					}
-					for _, tool := range example.Mocks.Tools {
-						if settingsErr == nil && tool.Mode == "recorded" && len(tool.Calls) == 0 && !localtools.IsDisabled(settings.Settings, tool.Name) {
-							return nil, refusal("confirmation_required")
-						}
-					}
-				}
-			}
+			confirmationRequired := false
 			executionRoute := previewExecutionRoute(files, selected, parsed, input.Model)
 			ctx = withHostProgress(ctx, name, req)
 			options := app.FilePreviewOptions{File: input.Path, SourceFile: sourcePath, FullPath: files.root == nil, Operation: name, CaseID: input.CaseID, Input: input.Input, ShowContent: input.ShowContent, ShowFailedContent: input.ShowFailedContent, Model: input.Model, Route: executionRoute, CaseFinished: caseProgressNotifier(ctx)}
@@ -113,10 +101,17 @@ func Operations(files *Files, application *app.App, route *modelaccess.Route) ma
 			}
 			options.RecordedReplayOnly, options.ExpectedToolSettings = input.RecordedReplayOnly, input.ExpectedToolSettings
 			options.PrepareRecordingSave = func(ctx context.Context, revision string) (app.RecordingSaver, error) {
+				if err := copilotCaptureConsent(parsed, input.RecordedReplayOnly, input.AcknowledgeCopilotTests); err != nil {
+					confirmationRequired = true
+					return nil, err
+				}
 				save, err := files.RecordingSaver(ctx, path, revision)
 				return app.RecordingSaver(save), err
 			}
 			result, err := application.PreviewAgentSnapshot(ctx, parsed, options)
+			if confirmationRequired {
+				return nil, refusal("confirmation_required")
+			}
 			if detail != nil && result.ReasonCode == "invalid_file" {
 				result.Diagnostic = &app.FilePreviewDiagnostic{Field: detail.Field, Line: detail.Location.Line, Column: detail.Location.Column, Repair: detail.Problem}
 			}
@@ -133,8 +128,14 @@ func Operations(files *Files, application *app.App, route *modelaccess.Route) ma
 		op.V3 = pairPreviewOperation(files, application, selected, name, op)
 		ops[name] = op
 	}
+	for _, name := range []string{"create", "edit"} {
+		op := ops[name]
+		op.V3 = pairAuthoringOperation(files, name)
+		ops[name] = op
+	}
 	if files != nil {
 		files.viewMu.Lock()
+		files.pairWrites = true
 		files.pairExecute = true
 		files.viewMu.Unlock()
 	}
